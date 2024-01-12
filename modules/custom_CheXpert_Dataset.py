@@ -3,13 +3,7 @@ from torchvision import transforms
 from torch.utils.data import Dataset
 import pandas as pd
 import os
-from dotenv import load_dotenv
 from PIL import Image
-
-load_dotenv()
-chexpert_root = os.getenv('PATH_TO_CHEXPERT_ROOT')
-dinfo_filename = 'train_data_info.csv'
-images_dirname = 'train_data'
 
 class CheXpert(Dataset):
     def __init__(self, root_dir, dinfo_filename, images_dirname, resize = True, custom_transforms = None):
