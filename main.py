@@ -97,9 +97,10 @@ for epoch in range(num_epochs):
         loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()
-
+        
         total_loss += loss.item()
         print(f"Epoch: {epoch + 1}, Iteration: {iteration + 1}")
+        iteration += 1
 
     av_loss = total_loss / len(train_loader)
     print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {av_loss:.4f}")
