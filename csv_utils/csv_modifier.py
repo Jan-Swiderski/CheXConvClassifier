@@ -5,11 +5,14 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+source_csv_name = 'valid.csv'
+out_csv_name = 'valid_data_info.csv'
+
 # Get the path to CheXpert dataset root directory
 chexpert_root = os.getenv('PATH_TO_CHEXPERT_ROOT')
 
 # Construct the path to the CSV file containing training data information (csv file)
-csv_path = os.path.join(chexpert_root, 'CheXpert-v1.0 batch 1 (validate & csv)/train.csv')
+csv_path = os.path.join(chexpert_root, 'CheXpert-v1.0 batch 1 (validate & csv)', source_csv_name)
 
 # Read the CSV file into a Pandas DataFrame
 df = pd.read_csv(csv_path)
@@ -27,4 +30,4 @@ df['Frontal(AP/PA)/Lateral'] = df['Frontal/Lateral'].str.cat(df['AP/PA'].fillna(
 df = df.drop(columns=['Frontal/Lateral', 'AP/PA'])
 
 # Save the modified DataFrame to a new CSV file in the CheXpert root directory
-df.to_csv(os.path.join(chexpert_root, 'train_data_info.csv'), index=False)
+df.to_csv(os.path.join(chexpert_root, out_csv_name), index=False)

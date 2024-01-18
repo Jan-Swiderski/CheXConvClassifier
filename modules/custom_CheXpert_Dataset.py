@@ -7,7 +7,7 @@ from PIL import Image
 
 class CheXpert(Dataset):
     
-    def __init__(self, root_dir:str, dinfo_filename:str, images_dirname:str, resize:bool = True, custom_size:tuple = (320, 320), custom_transforms = None):
+    def __init__(self, root_dir:str, dinfo_filename:str, images_dirname:str, resize:bool = True, custom_size:tuple = (320, 320), to_grayscale:bool = True, custom_transforms = None):
         """
         A custom PyTorch Dataset for the CheXpert dataset.
 
@@ -17,6 +17,7 @@ class CheXpert(Dataset):
             images_dirname (str): The directory name containing the images.
             resize (bool, optional): Whether to resize images. Default is True.
             custom_size (tuple, optional): A tuple representing the custom image size (height, width). Default is (320, 320).
+            to_grayscale(bool, optional): Whether to convert image to grayscale. Default is True.
             custom_transforms (callable, optional): A custom transform function to apply to images. Default is None.
         """
         # Load data information from the CSV file
@@ -28,16 +29,35 @@ class CheXpert(Dataset):
         self.labels = {'FrontalAP': torch.tensor([1, 0, 0]),
                        'FrontalPA': torch.tensor([0, 1, 0]),
                        'Lateral': torch.tensor([0, 0, 1])}
+
         
-        # Check if resizing is enabled and set the image transforms accordingly
-        if resize:
-            if custom_transforms:
-                self.transforms = transforms.Compose([transforms.Resize((custom_size)), custom_transforms])
-            else:
-                self.transforms = transforms.Resize((custom_size))
-        else:
-            self.transforms = custom_transforms
-        
+        # Dictionary defining transformation options based on input arguments
+        # The keys represent combinations of resize, to_grayscale, and custom_transforms.
+        # The values are corresponding transformation pipelines.
+        self.trans_type = {
+            # Case: Resize only:
+            (True, False, False): transforms.Resize((custom_size)),
+            # Case: Resize and convert to grayscale:
+            (True, True, False): transforms.Compose([transforms.Resize((custom_size)), transforms.Grayscale(num_output_channels = 1)]),
+            # Case: Resize and apply custom transforms:
+            (True, False, True): transforms.Compose([transforms.Resize((custom_size)), custom_transforms]),
+            # Case: Resize, convert to grayscale, and apply custom transforms:
+            (True, True, True): transforms.Compose([transforms.Resize((custom_size)), transforms.Grayscale(num_output_channels = 1), custom_transforms]),
+            # Case: No transformation:
+            (False, False, False): None,
+            # Case: Convert to grayscale and apply custom transforms:
+            (False, True, True): transforms.Compose([transforms.Grayscale(num_output_channels = 1), custom_transforms]),
+            # Case: Convert to grayscale only:
+            (False, True, False): transforms.Grayscale(num_output_channels = 1),
+            # Case: Apply custom transforms only:
+            (False, False, True): custom_transforms,
+        }
+
+        # Determine the transformation pipeline based on input arguments
+        # If any of resize, to_grayscale, or custom_transforms are True, select the appropriate pipeline.
+        # Otherwise, set transforms to None for no transformation.
+        self.transforms = self.trans_type[resize, to_grayscale, custom_transforms is not None]
+
     def __len__(self):
         # Return the total number of samples in the dataset
         return len(self.data_info)
