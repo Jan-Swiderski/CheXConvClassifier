@@ -9,7 +9,6 @@ from modules.classifier import Classifier
 import os
 from dotenv import load_dotenv
 
-
 # Load environment variables from .env file
 load_dotenv()
 chexpert_root = os.getenv('PATH_TO_CHEXPERT_ROOT')
@@ -44,12 +43,12 @@ train_dataset = CheXpert(root_dir = chexpert_root,
 
 # Define the test dataset size as the 30% of the train dataset.
 test_size = int(0.3 * len(train_dataset))
+
 # Redefine the train dateset size
 train_size = len(train_dataset) - test_size
 
 # Split the training dataset into training and test sets
 train_dataset, test_dataset = random_split(train_dataset, [train_size, test_size])
-
 
 # Initialize the validation dataset
 valid_dataset = CheXpert(root_dir = chexpert_root,
@@ -83,13 +82,14 @@ test_loader = DataLoader(dataset = test_dataset,
 
 # Define the loss function (CrossEntropyLoss) and optimizer (SGD)
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.SDG(net.parameters(), lr = learning_rate, momentum = momentum)
+optimizer = optim.SGD(net.parameters(), lr = learning_rate, momentum = momentum)
 
 # Training loop
 print("Starting training...")
 for epoch in range(num_epochs):
     net.train()
     total_loss = 0.0
+    iteration = 0
 
     for images, labels in train_loader:
         optimizer.zero_grad()
@@ -99,6 +99,7 @@ for epoch in range(num_epochs):
         optimizer.step()
 
         total_loss += loss.item()
+        print(f"Epoch: {epoch + 1}, Iteration: {iteration + 1}")
 
     av_loss = total_loss / len(train_loader)
     print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {av_loss:.4f}")
@@ -109,10 +110,9 @@ for epoch in range(num_epochs):
     with torch.no_grad():
         for images, labels in valid_loader:
             outputs = net(images)
-            _, correct_indxs = torch.max(labels, 1)
             _, predictions = torch.max(outputs, 1)
             total_preds += labels.size(0)
-            correct_preds += (predictions == correct_indxs).sum().item()
+            correct_preds += (predictions == labels).sum().item()
     
     accuracy = 100 * correct_preds / total_preds
     print(f'Validation accuracy: {accuracy:.2f}%')
@@ -121,16 +121,14 @@ print("Training finished")
 
 # Evaluate the model on the test dataset
 net.eval()
-
 correct_preds = 0
 total_preds = 0
 with torch.no_grad():
     for images, labels in test_loader:
         outputs = net(images)
-        _, correct_indxs = torch.max(labels, 1)
         _, predictions = torch.max(outputs, 1)
         total_preds += labels.size(0)
-        correct_preds += (predictions == correct_indxs).sum().item()
+        correct_preds += (predictions == labels).sum().item()
     
 accuracy = 100 * correct_preds / total_preds
 print(f'Test accuracy: {accuracy:.2f}%')

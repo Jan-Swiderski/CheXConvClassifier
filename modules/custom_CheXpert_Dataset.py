@@ -26,9 +26,9 @@ class CheXpert(Dataset):
         self.images_dirname = images_dirname
 
         # Define labels for each image type (One-hot encoding)
-        self.labels = {'FrontalAP': torch.tensor([1, 0, 0]),
-                       'FrontalPA': torch.tensor([0, 1, 0]),
-                       'Lateral': torch.tensor([0, 0, 1])}
+        self.labels = {'FrontalAP': 0,
+                       'FrontalPA': 1,
+                       'Lateral': 2}
 
         
         # Dictionary defining transformation options based on input arguments

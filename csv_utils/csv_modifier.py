@@ -2,6 +2,9 @@ import pandas as pd
 import os
 from dotenv import load_dotenv
 
+# Hyperparameter - decide whether to modify train.csv or valid.csv. If true, valid.csv is selected.
+if_valid = True
+
 # Load environment variables
 load_dotenv()
 
@@ -17,8 +20,12 @@ csv_path = os.path.join(chexpert_root, 'CheXpert-v1.0 batch 1 (validate & csv)',
 # Read the CSV file into a Pandas DataFrame
 df = pd.read_csv(csv_path)
 
-# Remove the 'CheXpert-v1.0/train/' prefix from the 'Path' column
-df['Path'] = df['Path'].str.replace('CheXpert-v1.0/train/', '')
+if if_valid:
+    # Remove the 'CheXpert-v1.0/valid/' prefix from the 'Path' column
+    df['Path'] = df['Path'].str.replace('CheXpert-v1.0/valid/', '')
+else:
+    # Remove the 'CheXpert-v1.0/train/' prefix from the 'Path' column
+    df['Path'] = df['Path'].str.replace('CheXpert-v1.0/train/', '')
 
 # Select columns from 'Path' to 'AP/PA' (inclusive)
 df = df.loc[:, 'Path':'AP/PA']
