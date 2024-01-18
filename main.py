@@ -67,9 +67,6 @@ net = Classifier(l1_out_chann = l1_out_chann,
                  im_size = im_size)
 
 net.to(device)
-train_dataset.to(device)
-valid_dataset.to(device)
-test_dataset.to(device)
 
 # Create data loaders
 train_loader = DataLoader(dataset = train_dataset,
@@ -89,6 +86,7 @@ criterion = nn.CrossEntropyLoss()
 optimizer = optim.SDG(net.parameters(), lr = learning_rate, momentum = momentum)
 
 # Training loop
+print("Starting training...")
 for epoch in range(num_epochs):
     net.train()
     total_loss = 0.0
