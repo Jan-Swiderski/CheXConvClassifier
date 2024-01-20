@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 chexpert_root = os.getenv('PATH_TO_CHEXPERT_ROOT')
+checkpoints_dir = os.getenv('PATH_TO_CHECKPOINTS_DIR')
 
 # Define important filenames.
 train_dinfo_filename = 'train_data_info.csv'
@@ -24,7 +25,7 @@ vaild_images_dirname = 'valid_data'
 learning_rate = 0.001
 momentum = 0.9
 num_epochs = 10
-
+batch_size = 1
 im_size = (320, 320) # Input image size
 l1_out_chann = 8 # Number of channels in the first convolutional layer
 l2_out_chann = 16 # Number of channels in the second convolutional layer
@@ -69,11 +70,11 @@ net.to(device)
 
 # Create data loaders
 train_loader = DataLoader(dataset = train_dataset,
-                          batch_size = 64,
+                          batch_size = batch_size,
                           shuffle = True)
 
 valid_loader = DataLoader(dataset = valid_dataset,
-                          batch_size = 64,
+                          batch_size = batch_size,
                           shuffle = False)
 
 test_loader = DataLoader(dataset = test_dataset,
@@ -86,10 +87,10 @@ optimizer = optim.SGD(net.parameters(), lr = learning_rate, momentum = momentum)
 
 # Training loop
 print("Starting training...")
+
 for epoch in range(num_epochs):
     net.train()
     total_loss = 0.0
-    iteration = 0
 
     for images, labels in train_loader:
         optimizer.zero_grad()
@@ -99,8 +100,6 @@ for epoch in range(num_epochs):
         optimizer.step()
         
         total_loss += loss.item()
-        print(f"Epoch: {epoch + 1}, Iteration: {iteration + 1}")
-        iteration += 1
 
     av_loss = total_loss / len(train_loader)
     print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {av_loss:.4f}")
@@ -117,6 +116,16 @@ for epoch in range(num_epochs):
     
     accuracy = 100 * correct_preds / total_preds
     print(f'Validation accuracy: {accuracy:.2f}%')
+
+    # Save both the model state and optimizer state as a PyTorch checkpoint. Current epoch number is also included.
+    checkpoint = {
+        'net_state_dict': net.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict(),
+        'epoch': epoch + 1
+    }
+    checkpoint_filename = f"checkpoint_epoch_{str(epoch + 1).zfill(3)}.pth"
+    torch.save(checkpoint, os.path.join(checkpoints_dir, checkpoint_filename))
+    print("Saved checkpoint as: ", checkpoint_filename)
 
 print("Training finished")
 

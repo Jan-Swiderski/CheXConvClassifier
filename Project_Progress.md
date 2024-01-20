@@ -11,7 +11,7 @@ I have developed the "csv_modifier.py" tool, which modifies the original CSV fil
 
 ## 3. custom_CheXpert_Dataset.py Module
 
-I have created the "custom_CheXpert_Dataset.py" module, defining the CheXpert class. This class inherits from the PyTorch Dataset class and returns a tuple with a CheXpert image and its ground truth label (One-got encoding). Custom transforms can be applied to the image, and both resizing (to 320 x 320 pixels) and converting the image to grayscale are supported.
+I have created the "custom_CheXpert_Dataset.py" module, defining the CheXpert class. This class inherits from the PyTorch Dataset class and returns a tuple with a CheXpert image and its ground truth label (integer encoding). Custom transforms can be applied to the image, and both resizing (to 320 x 320 pixels) and converting the image to grayscale are supported.
 
 ## 4. Classifier Module (classifier.py)
 
@@ -25,7 +25,7 @@ In the "main.py" file, I have implemented the main script for the project, where
 - Defining the neural network architecture using the custom classifier.
 - Configuring hyperparameters such as learning rate, momentum, and batch size.
 - Training the model using a training loop.
+- Saving checkpoints of the model's state and optimizer's state after each epoch.
 - Evaluating the model on validation and test datasets.
 
 This script serves as the central component of the project, orchestrating the entire machine learning pipeline.
-
