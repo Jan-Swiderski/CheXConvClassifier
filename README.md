@@ -1,9 +1,7 @@
-# Project Progress
-
 ## 1. Moving CheXpert Files
 
 All CheXpert files from "CheXpert-v1.0 batch x (train y)" folders have been consolidated into a single "train_data" folder within the CheXpert root directory.
-The folder "valid" from "CheXpert-v1.0 batch 1 (validate & csv)" has been moved to the CheXpert root directory and renamed to "valid_data"
+The folder "valid" from "CheXpert-v1.0 batch 1 (validate & csv)" has been moved to the CheXpert root directory and renamed to "valid_data".
 
 ## 2. CSV Modification Tool
 

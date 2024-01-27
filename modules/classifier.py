@@ -4,11 +4,15 @@ import torch.nn as nn
 
 class Classifier(nn.Module):
 
-    def __init__(self, l1_out_chann: int, l2_out_chann: int, l3_out_chann: int, im_size: tuple):
+    def __init__(self,
+                 l1_out_chann: int,
+                 l2_out_chann: int,
+                 l3_out_chann: int,
+                 im_size: tuple):
         """
         A custom convolutional neural network classifier.
 
-        Args:
+        Params:
             l1_out_chann (int): Number of output channels for the first convolutional layer.
             l2_out_chann (int): Number of output channels for the second convolutional layer.
             l3_out_chann (int): Number of output channels for the third convolutional layer.
