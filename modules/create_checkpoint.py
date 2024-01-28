@@ -24,6 +24,9 @@ def create_checkpoint(model: Classifier,
         checkpoints_dir (str): Path to the directory where checkpoints will be saved.
         accuracy (float): Model accuracy to be included in the checkpoint filename.
 
+        NOTE: When passing the epoch number as an argument, you should not add 1 to it! 
+        The function will handle the proper indexing with no user interference.
+        
     Raises:
         OSError: If there is an issue with creating the checkpoints directory.
         Exception: Handles other exceptions that may occur during checkpoint creation and saving.

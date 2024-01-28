@@ -22,7 +22,7 @@ def model_eval(model: Classifier,
 
     Returns:
             - total_loss (float): The total loss on the dataset.
-            - batch_loss (float): The average loss per batch.
+            - av_loss (float): The average loss per batch.
             - accuracy (float): The accuracy of the model on the dataset, expressed as a percentage.
     """
     # Set the model to evaluation mode.
@@ -54,8 +54,8 @@ def model_eval(model: Classifier,
             # Update the number of correct predictions.
             correct_preds += (predictions == labels).sum().item()
 
-    # Calculate the loss per each batch.
-    batch_loss = total_loss / len(dataloader)
+    # Calculate the average loss per each batch.
+    av_loss = total_loss / len(dataloader)
 
     # Calculate the accuracy as a percentage.
     accuracy = float(100 * correct_preds / total_preds)
@@ -63,4 +63,4 @@ def model_eval(model: Classifier,
     # Print the validation accuracy.
     print(f'Validation accuracy: {accuracy:.2f}%')
 
-    return total_loss, batch_loss, accuracy
+    return total_loss, av_loss, accuracy

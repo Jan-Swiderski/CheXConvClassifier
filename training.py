@@ -11,7 +11,8 @@ from modules.classifier import Classifier
 from modules.create_checkpoint import create_checkpoint
 from modules.epoch_train import epoch_train
 from modules.model_eval import model_eval
-from modules.model_test import model_test
+from modules.early_stopping import EarlyStopping
+from modules.plot_losses import plot_losses
 import os
 from dotenv import load_dotenv
 
@@ -39,6 +40,7 @@ if __name__ == "__main__":
     test_batch_size = 64
 
     patience = 3
+    min_improvement = 0.005
 
     im_size = (320, 320) # Input image size
     l1_out_chann = 8 # Number of channels in the first convolutional layer
@@ -73,17 +75,24 @@ if __name__ == "__main__":
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr = learning_rate, momentum = momentum)
 
+    earlystopper = EarlyStopping(patience = patience,
+                                 min_delta = min_improvement,
+                                 checkpoints_dir = best_acc_checkpoints_dir,
+                                 model = net,
+                                 optimizer = optimizer)
+
     # Training loop
     print("Starting training...")
 
-    # Initialize patience parameters
-    best_val_accuracy = 0
-    epochs_no_improve = 0
+    train_epoch_losses = []
+    val_total_losses = []
+    train_av_losses = []
+    val_batch_losses = []
 
     for epoch in range(max_epochs):
 
         # Training
-        epoch_train(model = net,
+        train_epoch_loss, train_av_loss = epoch_train(model = net,
                     train_loader = train_loader,
                     optimizer = optimizer,
                     criterion = criterion,
@@ -91,30 +100,33 @@ if __name__ == "__main__":
                     max_epochs = max_epochs)
 
         # Validation
-        val_accuracy = model_eval(model = net,
+        val_total_loss, val_batch_loss, val_accuracy = model_eval(model = net,
                                 valid_loader = valid_loader)
 
-        if val_accuracy <= best_val_accuracy:
-            epochs_no_improve += 1
-            if epochs_no_improve == patience:
-                break
-        else:
-            # Save checkpoint of the best model so far.
-            create_checkpoint(model = net,
-                            optimizer = optimizer,
-                            checkpoints_dir = best_acc_checkpoints_dir,
-                            accuracy = val_accuracy)
-            best_val_accuracy = val_accuracy
-            epochs_no_improve = 0
+        if earlystopper(val_accuracy, epoch):
+            break
         
+        train_epoch_losses.append(train_epoch_loss)
+        val_total_losses.append(val_total_loss)
+        train_av_losses.append(train_av_loss)
+        val_batch_losses.append(val_batch_loss)
+
         # Save model checkpoint after each epoch.
         create_checkpoint(model = net,
-                        optimizer = optimizer,
-                        checkpoints_dir = checkpoints_dir,
-                        accuracy = val_accuracy)
+                          optimizer = optimizer,
+                          checkpoints_dir = checkpoints_dir,
+                          accuracy = val_accuracy)
+    
+
 
     print("Training finished")
 
     # Evaluate the model on the test dataset
-    model_test(model = net,
-                test_loader = test_loader)
+    model_eval(model = net,
+                test_loader = test_loader,
+                criterion = criterion)
+    
+    plot_losses(train_epoch_losses = train_epoch_losses,
+                val_total_losses = val_total_losses,
+                train_av_losses = train_av_losses,
+                val_batch_losses= val_batch_losses)
