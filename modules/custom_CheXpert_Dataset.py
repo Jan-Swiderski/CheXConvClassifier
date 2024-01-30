@@ -2,8 +2,9 @@ import torch
 from torchvision import transforms
 from torch.utils.data import Dataset
 import pandas as pd
-import os
 from PIL import Image
+import os
+import psutil
 
 class CheXpert(Dataset):
     
@@ -11,9 +12,11 @@ class CheXpert(Dataset):
                  root_dir:str,
                  dinfo_filename:str,
                  images_dirname:str,
+                 ram_buffer_size_mb: int,
                  custom_size:tuple = (320, 320),
                  to_grayscale:bool = True,
-                 custom_transforms = None):
+                 custom_transforms = None,
+                 ):
         """
         A custom PyTorch Dataset for the CheXpert dataset.
 
@@ -29,6 +32,7 @@ class CheXpert(Dataset):
         self.data_info = pd.read_csv(os.path.join(root_dir, dinfo_filename))
         self.root_dir = root_dir
         self.images_dirname = images_dirname
+        self.ram_buffer_size_mb = ram_buffer_size_mb
 
         # Define labels for each image type
         self.labels = {'FrontalAP': 0,
@@ -51,6 +55,10 @@ class CheXpert(Dataset):
         else:
             self.transforms = None
 
+    def is_memory_available(self):
+        av_mem_mb = psutil.virtual_memory().available / (1024 ** 2)
+        return av_mem_mb > self.ram_buffer_size_mb
+        
     def __len__(self):
         # Return the total number of samples in the dataset
         return len(self.data_info)

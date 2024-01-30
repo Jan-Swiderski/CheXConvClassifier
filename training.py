@@ -38,6 +38,7 @@ if __name__ == "__main__":
     train_batch_size = 64
     valid_batch_size = 64
     test_batch_size = 64
+    min_mem_av_mb = 1024
 
     patience = 3
     min_improvement = 0.005
@@ -56,6 +57,7 @@ if __name__ == "__main__":
                                                               train_images_dirname = train_images_dirname,
                                                               valid_dinfo_filename = valid_dinfo_filename,
                                                               vaild_images_dirname = vaild_images_dirname,
+                                                              ram_buffer_size_mb = min_mem_av_mb
                                                               im_size = im_size)
 
     # Create data loaders

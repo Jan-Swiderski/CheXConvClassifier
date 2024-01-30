@@ -2,20 +2,19 @@ import pandas as pd
 import os
 from dotenv import load_dotenv
 
-# Hyperparameter - decide whether to modify train.csv or valid.csv. If true, valid.csv is selected.
-if_valid = True
-
-# Load environment variables
-load_dotenv()
+if_valid = True # Hyperparameter - decide whether to modify train.csv or valid.csv. If true, valid.csv is selected.
 
 source_csv_name = 'valid.csv'
 out_csv_name = 'valid_data_info.csv'
+
+# Load environment variables
+load_dotenv()
 
 # Get the path to CheXpert dataset root directory
 chexpert_root = os.getenv('PATH_TO_CHEXPERT_ROOT')
 
 # Construct the path to the CSV file containing training data information (csv file)
-csv_path = os.path.join(chexpert_root, 'CheXpert-v1.0 batch 1 (validate & csv)', source_csv_name)
+csv_path = os.path.join(chexpert_root, source_csv_name)
 
 # Read the CSV file into a Pandas DataFrame
 df = pd.read_csv(csv_path)
