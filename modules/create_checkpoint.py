@@ -6,13 +6,14 @@ import os
 
 def create_checkpoint(model: Classifier,
                       optimizer: Optimizer,
+                      model_init_params: dict,
                       epoch:int,
                       checkpoints_dir:str,
                       accuracy: float):
     """
     Create and save a checkpoint of a PyTorch model and its optimizer.
 
-    This function takes a PyTorch model, its optimizer, current epoch number, accuracy,
+    This function takes a PyTorch model, its optimizer, initialization parameters dicitionary, current epoch number, accuracy,
     and a directory path where checkpoints will be saved. It constructs a dictionary
     containing the model state, optimizer state, and epoch number, then saves it as
     a checkpoint file with a filename based on accuracy and epoch number.
@@ -20,6 +21,18 @@ def create_checkpoint(model: Classifier,
     Params:
         model (Classifier): PyTorch model to be saved.
         optimizer (Optimizer): PyTorch optimizer that optimizes the model.
+        model_init_params (dict): A dictionary containing parameters used to initialize the model of class classifier.
+                                    These parameters are:
+                                    l1_kernel_size (int): Kernel size of the first convolutional layer.
+                                    l1_stride (int): Stride of the first convolutional layer.
+                                    l1_out_chann (int): Number of output channels for the first convolutional layer.
+                                    l2_kernel_size (int): Kernel size of the second convolutional layer.
+                                    l2_stride (int): Stride of the second convolutional layer.
+                                    l2_out_chann (int): Number of output channels for the second convolutional layer.
+                                    l3_kernel_size (int): Kernel size of the third convolutional layer.
+                                    l3_stride (int): Stride of the third convolutional layer.
+                                    l3_out_chann (int): Number of output channels for the third convolutional layer.
+                                    im_size (tuple): A tuple representing the input image size in the format (height, width).
         epoch (int): Current epoch number.
         checkpoints_dir (str): Path to the directory where checkpoints will be saved.
         accuracy (float): Model accuracy to be included in the checkpoint filename.
@@ -39,13 +52,11 @@ def create_checkpoint(model: Classifier,
     checkpoint = {
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
+        'model_init_params': model_init_params,
         'epoch': epoch + 1  # Adding 1 to the epoch number because PyTorch indexes epochs from 0.
     }
 
     try:
-        # Check if the checkpoint directory exists; if not, create it.
-        # if not os.path.exists(checkpoints_dir):
-        #     print("Checkpoints directory does not exist. Creating in progress...")
             os.makedirs(checkpoints_dir, exist_ok = True)
     except OSError as e:
         # Handle any OS-related exceptions during directory creation.

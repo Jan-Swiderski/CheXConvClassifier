@@ -1,10 +1,6 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import torchvision.transforms as transforms
-from torch.utils.data import random_split
-from torch.utils.data import DataLoader
-from modules.custom_CheXpert_Dataset import CheXpert
 from modules.get_Datasets import get_Datasets
 from modules.get_DataLoaders import get_DataLoaders
 from modules.classifier import Classifier
@@ -54,6 +50,16 @@ if __name__ == "__main__":
     l3_kernel_size = 5
     l3_stride = 1
     
+    net_init_params = {'l1_kernel_size': l1_kernel_size,
+                        'l1_stride': l1_stride,
+                        'l1_out_chann': l1_out_chann,
+                        'l2_kernel_size': l2_kernel_size,
+                        'l2_stride': l2_stride,
+                        'l2_out_chann': l2_out_chann,
+                        'l3_kernel_size': l3_kernel_size,
+                        'l3_stride': l3_stride,
+                        'l3_out_chann': l3_out_chann,
+                        'im_size': im_size}
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -90,9 +96,10 @@ if __name__ == "__main__":
 
     earlystopper = EarlyStopping(patience = patience,
                                  min_delta = min_improvement,
-                                 checkpoints_dir = best_acc_checkpoints_dir,
                                  model = net,
-                                 optimizer = optimizer)
+                                 optimizer = optimizer,
+                                 model_init_params = net_init_params,
+                                 checkpoints_dir = best_acc_checkpoints_dir)
 
     # Training loop
     print("Starting training...")
@@ -127,11 +134,11 @@ if __name__ == "__main__":
         # Save model checkpoint after each epoch.
         create_checkpoint(model = net,
                           optimizer = optimizer,
+                          model_init_params = net_init_params,
+                          epoch = epoch,
                           checkpoints_dir = checkpoints_dir,
-                          accuracy = val_accuracy)
+                          accuracy = val_accuracy,)
     
-
-
     print("Training finished")
 
     # Evaluate the model on the test dataset
