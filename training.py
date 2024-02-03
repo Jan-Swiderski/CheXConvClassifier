@@ -45,8 +45,14 @@ if __name__ == "__main__":
 
     im_size = (320, 320) # Input image size
     l1_out_chann = 8 # Number of channels in the first convolutional layer
+    l1_kernel_size = 3
+    l1_stride = 1
     l2_out_chann = 16 # Number of channels in the second convolutional layer
+    l2_kernel_size = 3
+    l2_stride = 1
     l3_out_chann = 32  # Number of channels in the third convolutional layer
+    l3_kernel_size = 5
+    l3_stride = 1
     
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -57,7 +63,7 @@ if __name__ == "__main__":
                                                               train_images_dirname = train_images_dirname,
                                                               valid_dinfo_filename = valid_dinfo_filename,
                                                               vaild_images_dirname = vaild_images_dirname,
-                                                              ram_buffer_size_mb = min_mem_av_mb
+                                                              ram_buffer_size_mb = min_mem_av_mb,
                                                               im_size = im_size)
 
     # Create data loaders
@@ -66,10 +72,15 @@ if __name__ == "__main__":
                                                               test_dataset = test_dataset)
     
     # Initialize the model
-    net = Classifier(l1_out_chann = l1_out_chann,
-                    l2_out_chann = l2_out_chann,
-                    l3_out_chann = l3_out_chann,
-                    im_size = im_size)
+    net = Classifier(l1_kernel_size = l1_kernel_size,
+                     l1_stride = l1_stride,
+                     l1_out_chann = l1_out_chann,
+                     l2_kernel_size = l2_kernel_size,
+                     l2_stride = l2_stride,
+                     l2_out_chann = l2_out_chann,
+                     l3_kernel_size = l3_kernel_size,
+                     l3_stride = l3_stride,
+                     l3_out_chann = l3_out_chann)
 
     net.to(device)
 

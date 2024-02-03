@@ -36,7 +36,7 @@ def get_Datasets(chexpert_root: str,
     train_dataset = CheXpert(root_dir = chexpert_root,
                         dinfo_filename = train_dinfo_filename,
                         images_dirname = train_images_dirname,
-                        ram_buffer_size_mb = ram_buffer_size_mb
+                        ram_buffer_size_mb = ram_buffer_size_mb,
                         custom_size = im_size,
                         to_grayscale = True,
                         custom_transforms = custom_transforms)
@@ -54,7 +54,7 @@ def get_Datasets(chexpert_root: str,
     valid_dataset = CheXpert(root_dir = chexpert_root,
                             dinfo_filename = valid_dinfo_filename,
                             images_dirname = vaild_images_dirname,
-                            ram_buffer_size_mb = ram_buffer_size_mb
+                            ram_buffer_size_mb = ram_buffer_size_mb,
                             custom_size = im_size,
                             to_grayscale = True,
                             custom_transforms = custom_transforms)
