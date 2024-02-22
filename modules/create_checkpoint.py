@@ -1,8 +1,11 @@
-import torch
-import torch.nn as nn
-from torch.optim import Optimizer
-from classifier import Classifier
+"""
+This module defines a custom create_checkpoint fuction which, as the name suggests, is meant to be used to save
+the PyTorch neural network checkpoints.
+"""
 import os
+import torch
+from torch.optim import Optimizer
+from .classifier import Classifier
 
 def create_checkpoint(model: Classifier,
                       optimizer: Optimizer,
@@ -22,7 +25,7 @@ def create_checkpoint(model: Classifier,
         model (Classifier): PyTorch model to be saved.
         optimizer (Optimizer): PyTorch optimizer that optimizes the model.
         model_init_params (dict): A dictionary containing parameters used to initialize the model of class classifier.
-                                    These parameters are:
+                                    When working with the Classifier class instace, these parameters are:
                                     l1_kernel_size (int): Kernel size of the first convolutional layer.
                                     l1_stride (int): Stride of the first convolutional layer.
                                     l1_out_chann (int): Number of output channels for the first convolutional layer.
@@ -57,7 +60,7 @@ def create_checkpoint(model: Classifier,
     }
 
     try:
-            os.makedirs(checkpoints_dir, exist_ok = True)
+        os.makedirs(checkpoints_dir, exist_ok = True)
     except OSError as e:
         # Handle any OS-related exceptions during directory creation.
         print(f"An error occurred while creating the checkpoints directory: {str(e)}.")

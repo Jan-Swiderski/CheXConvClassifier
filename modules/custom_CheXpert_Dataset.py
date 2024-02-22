@@ -1,13 +1,25 @@
-import torch
+"""
+This module defines a custom PyTorch Dataset for loading and proper labeling the CheXpert Dataset images.
+The labels are as follows:
+FrontalAP: 0
+FrontalPA: 1
+Lateral: 2
+"""
+import os
+import psutil
 from torchvision import transforms
 from torch.utils.data import Dataset
 import pandas as pd
 from PIL import Image
-import os
-import psutil
 
 class CheXpert(Dataset):
-    
+    """
+    A custom PyTorch Dataset for loading and proper labeling the CheXpert Dataset images.
+    The labels are as follows:
+    FrontalAP: 0
+    FrontalPA: 1
+    Lateral: 2
+    """
     def __init__(self,
                  root_dir:str,
                  dinfo_filename:str,

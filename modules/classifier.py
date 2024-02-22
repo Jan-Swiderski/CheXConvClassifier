@@ -1,10 +1,21 @@
-import torch
-import torch.nn as nn
+"""
+This module defines a custom convolutional neural network class called Classifier.
+"""
 import math
-
+from torch import nn
 
 class Classifier(nn.Module):
-
+    """
+    A custom convolutional neural network (CNN) classifier.
+    This CNN consists of three convolutional layers followed by a ReLU activation function and a max pooling layer to reduce the spatial dimensions by half, and then two fully connected layers to produce the output predictions.
+    NOTE: The input image is expected to have a single channel (e.g., grayscale).
+    The network architecture is defined as follows:
+    - Convolutional layer 1 -> ReLU -> Max Pooling
+    - Convolutional layer 2 -> ReLU -> Max Pooling
+    - Convolutional layer 3 -> ReLU -> Max Pooling
+    - Fully Connected layer -> ReLU
+    - Output Fully Connected layer
+    """
     def __init__(self,
                  l1_kernel_size: int,
                  l1_stride: int,
@@ -15,32 +26,25 @@ class Classifier(nn.Module):
                  l3_kernel_size: int,
                  l3_stride: int,
                  l3_out_chann: int,
+                 fc_out_features: int,
                  im_size: tuple[int, int]):
         """
-        Initializes a custom convolutional neural network (CNN) classifier.
-
-        This CNN consists of three convolutional layers, each followed by a ReLU activation function and a max pooling layer to reduce the spatial dimensions by half.
-        Finally, a fully connected layer produces the output predictions.
-
-        NOTE: The input image is expected to have a single channel (e.g., grayscale).
-
+Initializes the classifier with specified configurations for each layer.
+        
         Params:
             l1_kernel_size (int): Kernel size of the first convolutional layer.
             l1_stride (int): Stride of the first convolutional layer.
-            l1_out_chann (int): Number of output channels for the first convolutional layer.
+            l1_out_filters (int): Number of output filters for the first convolutional layer.
             l2_kernel_size (int): Kernel size of the second convolutional layer.
             l2_stride (int): Stride of the second convolutional layer.
-            l2_out_chann (int): Number of output channels for the second convolutional layer.
+            l2_out_filters (int): Number of output filters for the second convolutional layer.
             l3_kernel_size (int): Kernel size of the third convolutional layer.
             l3_stride (int): Stride of the third convolutional layer.
-            l3_out_chann (int): Number of output channels for the third convolutional layer.
-            im_size (tuple): A tuple representing the input image size in the format (height, width).
+            l3_out_filters (int): Number of output filters for the third convolutional layer.
+            fc_out_features (int): Number of neurons in the output layer of the fully connected layer.
+            im_size (tuple[int, int]): The size of the input image (height, width).
 
-        The network architecture is defined as follows:
-        - Convolutional layer 1 -> ReLU -> Max Pooling
-        - Convolutional layer 2 -> ReLU -> Max Pooling
-        - Convolutional layer 3 -> ReLU -> Max Pooling
-        - Fully Connected layer
+        NOTE: The input image is expected to have a single channel (e.g., grayscale).
 
         """
         super(Classifier, self).__init__()
@@ -74,6 +78,8 @@ class Classifier(nn.Module):
         # This calculation accounts for the dimensionality reduction due to 3 max pooling layers, each reducing height and width by half.
         self.fc_in_features = int((self.im_height / (2**3)) * (self.im_width / (2**3)) * l3_out_chann)
 
+        self.out_in_features = fc_out_features
+
         # Define the first convolutional layer using the given parameters.
         self.layer1conv = nn.Conv2d(in_channels = 1, # Assuming input images are grayscale
                                     out_channels = l1_out_chann,
@@ -94,8 +100,10 @@ class Classifier(nn.Module):
                                     stride = l3_stride,
                                     padding = self.l3_s_padding)
         
-        # Define the fully connected layer. This layer maps the flattened feature maps to the output classes.
-        self.fc = nn.Linear(in_features = self.fc_in_features, out_features = 3)
+        # Define the fully connected layer.
+        self.fc = nn.Linear(in_features = self.fc_in_features, out_features = fc_out_features)
+
+        self.out = nn.Linear(in_features = self.out_in_features, out_features = 3)
 
         # Define max pooling layer. Reduces the spatial size of the feature map by half.
         self.maxpool = nn.MaxPool2d(kernel_size = 2,
@@ -146,7 +154,8 @@ class Classifier(nn.Module):
         """
         Defines the forward pass of the CNN classifier.
 
-        The input tensor 'x' passes through three convolutional layers, each followed by a ReLU activation and a max pooling operation. The final feature maps are flattened and passed through a fully connected layer to produce the output predictions.
+        Forward pass through the CNN. Applies consecutive convolutional layers with ReLU and max pooling,
+        followed by flattening and passing through fully connected layers to produce output predictions.
 
         Params:
             x (Tensor): A tensor representing a batch of input images with shape [batch_size, channels, height, width].
@@ -174,6 +183,10 @@ class Classifier(nn.Module):
         # Flatten the output tensor to prepare it for the fully connected layer, preserving the batch dimension.
         out = out.view(out.size(0), self.fc_in_features)
 
-        # Forward pass through the fully connected layer to produce the final output predictions.
+        # Forward pass through the first fully connected layer, followed by ReLU activation.        
         out = self.fc(out)
+        out = self.relu(out)
+        
+        # Forward pass through the out fully connected layer which produces the final outcome.
+        out = self.out(out)
         return out

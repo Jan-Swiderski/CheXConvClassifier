@@ -1,7 +1,11 @@
+"""
+This module defines the model_eval funtion which can be further used to either test or validate the PyTorch
+neural network model.
+"""
 import torch
-import torch.nn as nn
+from torch import nn
 from torch.utils.data import DataLoader
-from classifier import Classifier
+from .classifier import Classifier
 
 def model_eval(model: Classifier,
                dataloader: DataLoader,
@@ -61,6 +65,6 @@ def model_eval(model: Classifier,
     accuracy = float(100 * correct_preds / total_preds)
 
     # Print the validation accuracy.
-    print(f'Validation accuracy: {accuracy:.2f}%')
+    # print(f'Validation accuracy: {accuracy:.2f}%')
 
     return total_loss, av_loss, accuracy

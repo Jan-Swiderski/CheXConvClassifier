@@ -1,8 +1,11 @@
-import torch
-import torch.nn as nn
+"""
+This module defines the epoch_train funtion which performs an epoch of training
+of a given PyTorch neural network using the given dataloader, optimizer and criterion.
+"""
+from torch import nn
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
-from classifier import Classifier
+from .classifier import Classifier
 
 def epoch_train(model: Classifier,
                 train_loader: DataLoader,

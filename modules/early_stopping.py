@@ -1,8 +1,15 @@
-from create_checkpoint import create_checkpoint
+"""
+This module defines a custom EarlyStopping class to implement early stopping feature in the
+neural network training.
+"""
 from torch.optim import Optimizer
-from classifier import Classifier
+from .classifier import Classifier
+from .create_checkpoint import create_checkpoint
 
 class EarlyStopping:
+    """
+    A class for implementing early stopping during model training.
+    """
     def __init__(self,
                  patience: int,
                  min_delta: float,
@@ -30,7 +37,7 @@ class EarlyStopping:
             optimizer (Optimizer): The optimizer used for training the model.
             
             model_init_params (dict): A dictionary containing parameters used to initialize the model of class classifier.
-                                    These parameters are:
+                                    When working with the Classifier class instace, these parameters are:
                                     l1_kernel_size (int): Kernel size of the first convolutional layer.
                                     l1_stride (int): Stride of the first convolutional layer.
                                     l1_out_chann (int): Number of output channels for the first convolutional layer.

@@ -1,9 +1,11 @@
-import torch
-import torch.nn
+"""
+This module defines the get_dataloaders function which creates and returns training, validation and test dataloaders
+created using the corresponding datasets.
+"""
 from torch.utils.data import DataLoader
-from custom_CheXpert_Dataset import CheXpert
+from .custom_chexpert_dataset import CheXpert
 
-def get_DataLoaders(train_dataset: CheXpert,
+def get_dataloaders(train_dataset: CheXpert,
                     valid_dataset: CheXpert,
                     test_dataset: CheXpert,
                     train_batch_size: int = 64,
