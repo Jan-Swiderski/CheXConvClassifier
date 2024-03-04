@@ -27,9 +27,10 @@ class Classifier(nn.Module):
                  l3_stride: int,
                  l3_out_chann: int,
                  fc_out_features: int,
-                 im_size: tuple[int, int]):
+                 im_size: tuple[int, int],
+                 **kwargs):
         """
-Initializes the classifier with specified configurations for each layer.
+    Initializes the classifier with specified configurations for each layer.
         
         Params:
             l1_kernel_size (int): Kernel size of the first convolutional layer.

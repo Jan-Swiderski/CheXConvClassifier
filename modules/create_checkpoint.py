@@ -4,10 +4,10 @@ the PyTorch neural network checkpoints.
 """
 import os
 import torch
+from torch import nn
 from torch.optim import Optimizer
-from .classifier import Classifier
 
-def create_checkpoint(model: Classifier,
+def create_checkpoint(model: nn.Module,
                       optimizer: Optimizer,
                       model_init_params: dict,
                       epoch:int,
@@ -22,20 +22,9 @@ def create_checkpoint(model: Classifier,
     a checkpoint file with a filename based on accuracy and epoch number.
 
     Params:
-        model (Classifier): PyTorch model to be saved.
+        model (nn.Module): PyTorch model to be saved.
         optimizer (Optimizer): PyTorch optimizer that optimizes the model.
-        model_init_params (dict): A dictionary containing parameters used to initialize the model of class classifier.
-                                    When working with the Classifier class instace, these parameters are:
-                                    l1_kernel_size (int): Kernel size of the first convolutional layer.
-                                    l1_stride (int): Stride of the first convolutional layer.
-                                    l1_out_chann (int): Number of output channels for the first convolutional layer.
-                                    l2_kernel_size (int): Kernel size of the second convolutional layer.
-                                    l2_stride (int): Stride of the second convolutional layer.
-                                    l2_out_chann (int): Number of output channels for the second convolutional layer.
-                                    l3_kernel_size (int): Kernel size of the third convolutional layer.
-                                    l3_stride (int): Stride of the third convolutional layer.
-                                    l3_out_chann (int): Number of output channels for the third convolutional layer.
-                                    im_size (tuple): A tuple representing the input image size in the format (height, width).
+        model_init_params (dict): A dictionary containing parameters used to initialize or train the model.
         epoch (int): Current epoch number.
         checkpoints_dir (str): Path to the directory where checkpoints will be saved.
         accuracy (float): Model accuracy to be included in the checkpoint filename.

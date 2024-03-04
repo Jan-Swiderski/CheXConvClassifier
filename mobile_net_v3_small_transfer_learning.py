@@ -1,24 +1,24 @@
 """
-This module serves as the orchestrator for the entire neural network training process,
-encompassing the initial setup, execution, and evaluation phases. It is designed to streamline
-the workflow from loading and preprocessing data, through training and validation, to the final
-evaluation on a test set. Key functionalities include environment setup, data loading and
-transformation, model initialization, training loop execution with early stopping, and performance
-evaluation.
+This module orchestrates the process of fine-tuning a pre-trained neural network model for a new task, leveraging
+transfer learning to improve efficiency and effectiveness. It encompasses the setup, execution, and evaluation phases
+for adapting the MobileNet v3 model to classify images into three categories. The workflow includes loading and
+preprocessing data, modifying the model architecture for the new task, training the model with early stopping, and
+evaluating its performance on a test set. Key functionalities cover environment setup, dataset preparation, model
+adaptation and initialization, training loop execution, and performance evaluation.
 
 Features:
-- Load environment variables for paths to datasets and checkpoints.
-- Create necessary directories for storing model checkpoints, specifically focusing on the best
-  performing models based on validation accuracy.
-- Initialize hyperparameters and model architecture parameters, allowing for easy adjustments to
-  experiment with different configurations.
+- Load environment variables for dataset and checkpoint paths.
+- Ensure directory creation for storing model checkpoints, focusing on best validation accuracy.
+- Initialize hyperparameters and adapt the MobileNet v3 architecture parameters for the classification task.
 - Load datasets for training, validation, and testing phases, with support for dynamic image resizing
   and in-memory buffering to optimize performance.
-- Define the model parameters, loss function, and optimizer, setting the stage for the training process.
+- Modify the MobileNet v3 model by adjusting the first convolutional layer to accommodate input image channel size
+  and replacing the final classification layer to fit the number of target classes.
 - Utilize `torchsummary` for a comprehensive summary of the model, providing a detailed overview of the
   architecture, including layer types, output shapes, and parameter counts. This facilitates a deep
   understanding of the model's structure and complexity before initiating the training process, ensuring
   transparency and aiding in debugging and optimization efforts.
+- Define loss function and optimizer tailored for fine-tuning the adapted model.
 - Implement an early stopping mechanism to prevent overfitting and to ensure efficient training by
   halting the process once the model ceases to improve on the validation set.
 - Conduct a thorough evaluation of the model on both validation and test datasets to gauge its
@@ -26,16 +26,18 @@ Features:
 - Visualize training and validation loss trends over epochs to monitor the learning process and
   diagnose potential issues.
 """
+
 import time
 import os
 from dotenv import load_dotenv
 import torch
 from torch import nn
 from torch import optim
+from torchvision import models
+from torchvision.models.mobilenetv3 import MobileNet_V3_Small_Weights
 from torchsummary import summary
 from modules.get_datasets import get_datasets
 from modules.get_dataloaders import get_dataloaders
-from modules.classifier import Classifier
 from modules.create_checkpoint import create_checkpoint
 from modules.epoch_train import epoch_train
 from modules.model_eval import model_eval
@@ -49,16 +51,27 @@ if __name__ == "__main__":
     # Load environment variables from .env file
     load_dotenv(dotenv_path = "./.env", override = True)
     CHEXPERT_ROOT = os.getenv('PATH_TO_CHEXPERT_ROOT')
-    CHECKPOINTS_DIR = os.getenv('PATH_TO_CHECKPOINTS_DIR')
+    CHECKPOINTS_ROOT = os.getenv('PATH_TO_CHECKPOINTS_DIR')
+
+    CHECKPOINTS_DIR = os.path.join(CHECKPOINTS_ROOT, f"{time.strftime('%Y-%m-%d_%H-%M')}_mobile_net_v3_small")
+
+    try:
+        os.makedirs(CHECKPOINTS_DIR)
+        print(f"The directory {CHECKPOINTS_DIR} was created successfuly.")
+    except FileExistsError:
+        print("Cannot initiate training in an existing directory. "
+            "This directory may contain files from previous training sessions, risking data structure corruption. "
+            "Please verify the environmental variables and all specified paths before attempting another run.")
+    except Exception as e:
+        print(f"An unexpected error occurred while creating the directory {CHECKPOINTS_DIR}: {str(e)}")
 
     # Create the directory for the best accuracy checkpoints in the main checkpoints directory
     BEST_ACC_CHECKPOINTS_DIR = os.path.join(CHECKPOINTS_DIR, "best_acc_checkpoints")
-
     try:
         os.makedirs(BEST_ACC_CHECKPOINTS_DIR)
         print(f"The directory {BEST_ACC_CHECKPOINTS_DIR} was created successfuly.")
-    except:
-        print(f"The directory {BEST_ACC_CHECKPOINTS_DIR} already exists.")
+    except Exception as e:
+        print(f"An unexpected error occurred while creating the directory {BEST_ACC_CHECKPOINTS_DIR}: {str(e)}")
         
     # Define important filenames.
     TRAIN_DINFO_FILENAME = 'final_train_data_info.csv'
@@ -71,42 +84,32 @@ if __name__ == "__main__":
     TEST_IMAGES_DIRNAME = TRAIN_IMAGES_DIRNAME
 
     # Hyperparameters
-    LEARNING_RATE = 0.001
+    LEARNING_RATE = 0.0001
     MOMENTUM = 0.9
     MAX_EPOCHS = 50
-    TRAIN_BATCH_SIZE = 64
-    VALID_BATCH_SIZE = 64
-    TEST_BATCH_SIZE = 64
+    TRAIN_BATCH_SIZE = 32
+    VALID_BATCH_SIZE = 32
+    TEST_BATCH_SIZE = 32
     MIN_MEM_AV_MB = 1024
 
     PATIENCE = 5 # Number of epochs with no improvement after which training will be stopped.
-    MIN_IMPROVEMENT = 0.5 # Minimum improvement in validation accuracy to qualify as an improvement.
+    MIN_IMPROVEMENT = 0.0001 # Minimum improvement in validation accuracy to qualify as an improvement.
 
     IM_SIZE = (128, 128) # Input image size
-    L1_OUT_CHANN = 8 # Number of filters in the first convolutional layer
-    L1_KERNEL_SIZE = 5 # Size of the first layer's kernel
-    L1_STRIDE = 1 # Stride of the first layer
-    L2_OUT_CHANN = 16 # Number of filters in the second convolutional layer
-    L2_KERNEL_SIZE = 3 # Size of the second layer's kernel
-    L2_STRIDE = 1 # Stride of the second layer
-    L3_OUT_CHANN = 32  # Number of channels in the third convolutional layer
-    L3_KERNEL_SIZE = 5 # Size of the thrid layer's kernel
-    L3_STRIDE = 1 # Stride of the third layer
-    FC_OUT_FEATURES = 32 #Output features of the first fully connected layer
+
+    OPTIMIZER_TYPE = "torch.optim.Adam" # Just the information to save with checkpoints. Can come in handy if resuming training is needed.
     
-    # Create a dicttionary containing all of the network initialization parameters.
+    # Create a dicttionary containing all of the network initialization and training parameters. It also contains the optimizer.
     # It will be further passed to the function creating checkpoints and saved in every checkpoint.
-    net_init_params = {'l1_kernel_size': L1_KERNEL_SIZE,
-                        'l1_stride': L1_STRIDE,
-                        'l1_out_chann': L1_OUT_CHANN,
-                        'l2_kernel_size': L2_KERNEL_SIZE,
-                        'l2_stride': L2_STRIDE,
-                        'l2_out_chann': L2_OUT_CHANN,
-                        'l3_kernel_size': L3_KERNEL_SIZE,
-                        'l3_stride': L3_STRIDE,
-                        'l3_out_chann': L3_OUT_CHANN,
-                        'fc_out_features': FC_OUT_FEATURES,
-                        'im_size': IM_SIZE}
+    net_init_params = {'lr': LEARNING_RATE,
+                       'momentum': MOMENTUM,
+                       'optimizer_type': OPTIMIZER_TYPE,
+                       'train_batch_size': TRAIN_BATCH_SIZE,
+                       'valid_batch_size': VALID_BATCH_SIZE,
+                       'test_batch_size': TEST_BATCH_SIZE,
+                       'patience': PATIENCE,
+                       'min_improvement': MIN_IMPROVEMENT,
+                       'im_size': IM_SIZE}
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -129,29 +132,56 @@ if __name__ == "__main__":
                                                               test_dataset = test_dataset,
                                                               test_batch_size = TEST_BATCH_SIZE)
     
-    # Initialize the model with the specified architecture parameters.
-    net = Classifier(**net_init_params)
+    # Load the model with pretrained weights
+    WEIGHTS = MobileNet_V3_Small_Weights.DEFAULT
+    mobilenet_v3_small = models.mobilenet_v3_small(weights=WEIGHTS)
 
-    net.to(device)
+    # Retrieve the first convolutional layer
+    first_conv_layer = mobilenet_v3_small.features[0][0]
 
-    # Define the loss function (CrossEntropyLoss) and optimizer (SGD)
+    # Calculate the mean of the weights across the RGB channels of the first convolutional layer
+    new_weights = first_conv_layer.weight.detach().mean(dim=1, keepdim=True)
+
+    # Create a new first convolutional layer that accepts 1 input channel
+    new_first_conv_layer = torch.nn.Conv2d(in_channels=1,
+                                            out_channels=first_conv_layer.out_channels,
+                                            kernel_size=first_conv_layer.kernel_size,
+                                            stride=first_conv_layer.stride,
+                                            padding=first_conv_layer.padding,
+                                            bias=first_conv_layer.bias)
+
+    # Assign the new weights to the new first layer
+    new_first_conv_layer.weight.data = new_weights
+
+    # Replace the original first layer with the new one
+    mobilenet_v3_small.features[0][0] = new_first_conv_layer
+
+    # Adjust the last layer for the new number of classes
+    last_layer_in_features = mobilenet_v3_small.classifier[-1].in_features
+    mobilenet_v3_small.classifier[-1] = torch.nn.Linear(last_layer_in_features, 3)
+
+    mobilenet_v3_small.to(device)
+
+    # Define the loss function (CrossEntropyLoss) and optimizer (Adam)
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(net.parameters(), lr = LEARNING_RATE, momentum = MOMENTUM)
+
+    # optimizer = optim.SGD(mobilenet_v3_small.parameters(), lr = LEARNING_RATE, momentum = MOMENTUM)
+    optimizer = optim.Adam(params=mobilenet_v3_small.parameters(), lr=LEARNING_RATE)
 
     # Create an instance of a custom EarlyStopping class.
     earlystopper = EarlyStopping(patience = PATIENCE,
                                  min_delta = MIN_IMPROVEMENT,
-                                 model = net,
+                                 model = mobilenet_v3_small,
                                  optimizer = optimizer,
                                  model_init_params = net_init_params,
                                  checkpoints_dir = BEST_ACC_CHECKPOINTS_DIR)
     
     
-    print(f"Model initialization parameters: {net_init_params}", "/n")
+    print(f"Model initialization and training parameters: {net_init_params}", "\n")
 
-    print(f"Model summary with the input size of: {IM_SIZE}", "/n")
+    print(f"Model summary with the input size of: {IM_SIZE}", "\n")
     with torch.no_grad():
-        summary(net, (1, 128, 128))
+        summary(mobilenet_v3_small, (1, IM_SIZE[0], IM_SIZE[1]))
 
 
     # Training loop
@@ -167,7 +197,7 @@ if __name__ == "__main__":
         print("\n")
 
         # Perform one epoch of training and return the losses.
-        train_epoch_loss, train_av_loss = epoch_train(model = net,
+        train_epoch_loss, train_av_loss = epoch_train(model = mobilenet_v3_small,
                     train_loader = train_loader,
                     optimizer = optimizer,
                     criterion = criterion,
@@ -175,7 +205,7 @@ if __name__ == "__main__":
                     max_epochs = MAX_EPOCHS)
 
         # Perform validation after each epoch and return the losses and accuracy.
-        val_total_loss, val_batch_loss, val_accuracy = model_eval(model = net, 
+        val_total_loss, val_batch_loss, val_accuracy = model_eval(model = mobilenet_v3_small, 
                                                                 criterion = criterion,
                                                                 dataloader = valid_loader)
 
@@ -188,7 +218,7 @@ if __name__ == "__main__":
         val_batch_losses.append(val_batch_loss)
 
         # Save a checkpoint after each epoch.
-        create_checkpoint(model = net,
+        create_checkpoint(model = mobilenet_v3_small,
                         optimizer = optimizer,
                         model_init_params = net_init_params,
                         epoch = epoch,
@@ -202,7 +232,7 @@ if __name__ == "__main__":
     print("Training finished")
 
     # Evaluate the model on the test dataset
-    _, _, test_accuracy = model_eval(model = net,
+    _, _, test_accuracy = model_eval(model = mobilenet_v3_small,
                         dataloader = test_loader,
                         criterion = criterion)
     

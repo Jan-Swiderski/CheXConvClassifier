@@ -5,9 +5,8 @@ of a given PyTorch neural network using the given dataloader, optimizer and crit
 from torch import nn
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
-from .classifier import Classifier
 
-def epoch_train(model: Classifier,
+def epoch_train(model: nn.Module,
                 train_loader: DataLoader,
                 optimizer: Optimizer,
                 criterion: nn.Module,
@@ -20,12 +19,17 @@ def epoch_train(model: Classifier,
     At the end of each epoch it prints the average loss.
 
     Params:
-    model (Classifier): The neural network model of class Classifier to be trained.
+    model (nn.Module): Any neural network model that is a subclass of torch.nn.Module to be trained.
+
     train_loader (DataLoader): DataLoader containing the training dataset.
                                It provides batches of data (images and labels) for training.
+
     optimizer (Optimizer): The optimization algorithm used for updating the model's parameters.
-    criterion (nn.Module): The loss function used to measure the model's performance. In this architecture nn.CrossEntropyLoss() is recommended.
+
+    criterion (nn.Module): The loss function used to measure the model's performance.
+
     epoch (int): The current epoch number during training.
+    
     max_epochs (int): The total number of epochs for training.
     """
     # Set the model to training mode.

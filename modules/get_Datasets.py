@@ -2,7 +2,6 @@
 Thins module defines the get_datasets function which creates and returns the training, validation and test dataset as
 instances of a custom CheXpert dataset class.
 """
-from torch.utils.data import random_split
 import torchvision.transforms as transforms
 from .custom_chexpert_dataset import CheXpert
 
@@ -15,9 +14,10 @@ def get_datasets(chexpert_root: str,
                  test_images_dirname: str,
                  ram_buffer_size_mb: int,
                  im_size: tuple[int, int],
-                 custom_transforms = transforms.ToTensor()):
+                 custom_transforms: callable = transforms.ToTensor()):
     """
-    Function get_Datasets creates training, validation, and test datasets for CheXpert.
+    Function get_Datasets creates training, validation, and test datasets. 
+    Each one is an instance of a custom CheXpert class.
     
     Params:
     - chexpert_root (str): Root directory of CheXpert dataset.

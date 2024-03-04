@@ -3,11 +3,11 @@ This module defines the get_dataloaders function which creates and returns train
 created using the corresponding datasets.
 """
 from torch.utils.data import DataLoader
-from .custom_chexpert_dataset import CheXpert
+from torch.utils.data import Dataset
 
-def get_dataloaders(train_dataset: CheXpert,
-                    valid_dataset: CheXpert,
-                    test_dataset: CheXpert,
+def get_dataloaders(train_dataset: Dataset,
+                    valid_dataset: Dataset,
+                    test_dataset: Dataset,
                     train_batch_size: int = 64,
                     valid_batch_size: int = 64,
                     test_batch_size: int = 64,
@@ -16,9 +16,9 @@ def get_dataloaders(train_dataset: CheXpert,
     Function creates DataLoaders for the training, validation, and test datasets.
 
     Params:
-    - train_dataset (CheXpert): Training dataset.
-    - valid_dataset (CheXpert): Validation dataset.
-    - test_dataset (CheXpert): Test dataset.
+    - train_dataset (Dataset): Training dataset.
+    - valid_dataset (Dataset): Validation dataset.
+    - test_dataset (Dataset): Test dataset.
     - train_batch_size (int): Batch size for the training DataLoader. Default is 64.
     - valid_batch_size (int): Batch size for the validation DataLoader. Default is 64.
     - test_batch_size (int): Batch size for the test DataLoader. Default is 64.

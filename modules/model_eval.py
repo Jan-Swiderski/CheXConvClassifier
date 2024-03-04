@@ -5,9 +5,8 @@ neural network model.
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
-from .classifier import Classifier
 
-def model_eval(model: Classifier,
+def model_eval(model: nn.Module,
                dataloader: DataLoader,
                criterion: nn.Module):
 
@@ -19,7 +18,7 @@ def model_eval(model: Classifier,
     and comparing them to the ground truth.
 
     Params:
-        model (Classifier): The neural network model of class Classifier to be validated.
+        model (nn.Module): Any neural network model that is a subclass of torch.nn.Module to be validated.
         dataloader (DataLoader): DataLoader containing the dataset for evaluation.
                                  It provides batches of data (images and labels) for evaluation.
         criterion (nn.Module): The loss function used for calculating the loss.

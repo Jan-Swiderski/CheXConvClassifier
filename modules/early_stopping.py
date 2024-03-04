@@ -2,8 +2,8 @@
 This module defines a custom EarlyStopping class to implement early stopping feature in the
 neural network training.
 """
+from torch import nn
 from torch.optim import Optimizer
-from .classifier import Classifier
 from .create_checkpoint import create_checkpoint
 
 class EarlyStopping:
@@ -13,15 +13,16 @@ class EarlyStopping:
     def __init__(self,
                  patience: int,
                  min_delta: float,
-                 model: Classifier,
+                 model: nn.Module,
                  optimizer: Optimizer,
                  model_init_params: dict,
                  checkpoints_dir: str):
         
         """
-        A class for implementing early stopping during model training.
-        
-        NOTE: When calling the class instance and passing the epoch number as an argument, you should not add 1 to it!
+        Initializes the EarlyStopping instance with specified parameters for monitoring
+        and controlling the training process based on the evaluation metric.
+
+        NOTE: When passing the epoch number as an argument, you should not add 1 to it!
         The function create_checkpoint used in the class will handle
         the proper indexing with no need for user interference.
 
@@ -30,38 +31,29 @@ class EarlyStopping:
                             training should be stopped.
             
             min_delta (float): The minimum change in the evaluation metric to
-                            be considered as an improvement.
+                               be considered as an improvement.
             
-            model (Classifier): The neural network model as a instance of class Classifier being trained.
+            model (nn.Module): The neural network model being trained. This class is designed
+                               to work with any model that is a subclass of torch.nn.Module.
             
             optimizer (Optimizer): The optimizer used for training the model.
             
-            model_init_params (dict): A dictionary containing parameters used to initialize the model of class classifier.
-                                    When working with the Classifier class instace, these parameters are:
-                                    l1_kernel_size (int): Kernel size of the first convolutional layer.
-                                    l1_stride (int): Stride of the first convolutional layer.
-                                    l1_out_chann (int): Number of output channels for the first convolutional layer.
-                                    l2_kernel_size (int): Kernel size of the second convolutional layer.
-                                    l2_stride (int): Stride of the second convolutional layer.
-                                    l2_out_chann (int): Number of output channels for the second convolutional layer.
-                                    l3_kernel_size (int): Kernel size of the third convolutional layer.
-                                    l3_stride (int): Stride of the third convolutional layer.
-                                    l3_out_chann (int): Number of output channels for the third convolutional layer.
-                                    im_size (tuple): A tuple representing the input image size in the format (height, width).
-
+            model_init_params (dict): A dictionary containing parameters used to initialize or train the model.
+                                      This is necessary for creating checkpoints.
+            
             checkpoints_dir (str): The directory where checkpoints of the model
-                                will be saved when improvements occur.
+                                   will be saved when improvements occur.
 
         Attributes:
-            patience (int)
-            min_delta (float)
-            model (Classifier)
-            optimizer (Optimizer)
-            model_init_params (dict)
-            checkpoints_dir (str)
-            epoch (int)
-            no_improve (int): Counter for consecutive epochs with no improvement.
-            best_score (float): The best evaluation metric score achieved so far.
+            patience (int): Number of epochs to wait without improvement before stopping the training.
+            min_delta (float): Minimum change in the monitored metric to qualify as an improvement.
+            model (nn.Module): Model being trained.
+            optimizer (Optimizer): Optimizer used for training.
+            model_init_params (dict): Parameters used for model initialization.
+            checkpoints_dir (str): Directory to save model checkpoints.
+            no_improve (int): Counter for consecutive epochs without improvement.
+            best_score (float): Best evaluation metric score achieved so far.
+
 
         Methods:
             __call__(self, new_score, epoch):
