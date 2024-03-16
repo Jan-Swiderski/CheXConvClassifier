@@ -173,7 +173,7 @@ if __name__ == "__main__":
                                  min_delta = MIN_IMPROVEMENT,
                                  model = mobilenet_v3_large,
                                  optimizer = optimizer,
-                                 model_init_params = net_init_params,
+                                 trainig_init_params = net_init_params,
                                  checkpoints_dir = BEST_ACC_CHECKPOINTS_DIR)
     
     
@@ -220,7 +220,7 @@ if __name__ == "__main__":
         # Save a checkpoint after each epoch.
         create_checkpoint(model = mobilenet_v3_large,
                         optimizer = optimizer,
-                        model_init_params = net_init_params,
+                        trainig_init_params = net_init_params,
                         epoch = epoch,
                         checkpoints_dir = CHECKPOINTS_DIR,
                         accuracy = val_accuracy)

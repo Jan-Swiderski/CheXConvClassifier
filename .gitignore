@@ -1,5 +1,5 @@
 .env
-test.py
-test.ipynb
+dummy.py
+dummy.ipynb
 __pycache__/
 util.py

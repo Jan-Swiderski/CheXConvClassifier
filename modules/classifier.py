@@ -27,8 +27,7 @@ class Classifier(nn.Module):
                  l3_stride: int,
                  l3_out_chann: int,
                  fc_out_features: int,
-                 im_size: tuple[int, int],
-                 **kwargs):
+                 im_size: tuple[int, int]):
         """
     Initializes the classifier with specified configurations for each layer.
         

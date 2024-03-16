@@ -105,13 +105,13 @@ if __name__ == "__main__":
     L3_STRIDE = 1 # Stride of the third layer
     FC_OUT_FEATURES = 32 #Output features of the first fully connected layer
 
-    OPTIMIZER_TYPE = "torch.optim.SGD" # Just the information to save with checkpoints. Can come in handy if resuming training is needed.
+    OPTIMIZER_CLASS = "torch.optim.SGD" # Just the information to save with checkpoints. Can come in handy if resuming training is needed.
     
     # Create a dicttionary containing all of the network initialization and training parameters. It also contains the optimizer.
     # It will be further passed to the function creating checkpoints and saved in every checkpoint.
-    net_init_params = {'lr': LEARNING_RATE,
+    train_init_params = {'lr': LEARNING_RATE,
                        'momentum': MOMENTUM,
-                       'optimizer_type': OPTIMIZER_TYPE,
+                       'optimizer_class': OPTIMIZER_CLASS,
                        'train_batch_size': TRAIN_BATCH_SIZE,
                        'valid_batch_size': VALID_BATCH_SIZE,
                        'test_batch_size': TEST_BATCH_SIZE,
@@ -151,7 +151,7 @@ if __name__ == "__main__":
                                                               test_batch_size = TEST_BATCH_SIZE)
     
     # Initialize the model with the specified architecture parameters.
-    net = Classifier(**net_init_params)
+    net = Classifier(**train_init_params)
 
     net.to(device)
 
@@ -165,11 +165,11 @@ if __name__ == "__main__":
                                  min_delta = MIN_IMPROVEMENT,
                                  model = net,
                                  optimizer = optimizer,
-                                 model_init_params = net_init_params,
+                                 trainig_init_params = train_init_params,
                                  checkpoints_dir = BEST_ACC_CHECKPOINTS_DIR)
     
     
-    print(f"Model initialization and training parameters: {net_init_params}", "\n")
+    print(f"Model initialization and training parameters: {train_init_params}", "\n")
 
     print(f"Model summary with the input size of: {IM_SIZE}", "\n")
     with torch.no_grad():
@@ -212,7 +212,7 @@ if __name__ == "__main__":
         # Save a checkpoint after each epoch.
         create_checkpoint(model = net,
                         optimizer = optimizer,
-                        model_init_params = net_init_params,
+                        trainig_init_params = train_init_params,
                         epoch = epoch,
                         checkpoints_dir = CHECKPOINTS_DIR,
                         accuracy = val_accuracy)

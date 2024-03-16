@@ -15,7 +15,7 @@ class EarlyStopping:
                  min_delta: float,
                  model: nn.Module,
                  optimizer: Optimizer,
-                 model_init_params: dict,
+                 trainig_init_params: dict,
                  checkpoints_dir: str):
         
         """
@@ -38,19 +38,19 @@ class EarlyStopping:
             
             optimizer (Optimizer): The optimizer used for training the model.
             
-            model_init_params (dict): A dictionary containing parameters used to initialize or train the model.
+            trainig_init_params (dict): A dictionary containing parameters used to initialize or train the model.
                                       This is necessary for creating checkpoints.
             
             checkpoints_dir (str): The directory where checkpoints of the model
                                    will be saved when improvements occur.
 
         Attributes:
-            patience (int): Number of epochs to wait without improvement before stopping the training.
-            min_delta (float): Minimum change in the monitored metric to qualify as an improvement.
-            model (nn.Module): Model being trained.
-            optimizer (Optimizer): Optimizer used for training.
-            model_init_params (dict): Parameters used for model initialization.
-            checkpoints_dir (str): Directory to save model checkpoints.
+            patience (int)
+            min_delta (float)
+            model (nn.Module)
+            optimizer (Optimizer)
+            trainig_init_params (dict)
+            checkpoints_dir (str)
             no_improve (int): Counter for consecutive epochs without improvement.
             best_score (float): Best evaluation metric score achieved so far.
 
@@ -83,7 +83,7 @@ class EarlyStopping:
 
         self.model = model
         self.optimizer = optimizer
-        self.model_init_params = model_init_params
+        self.model_init_params = trainig_init_params
 
         # Initialize counters
         self.no_improve = 0
@@ -116,7 +116,7 @@ class EarlyStopping:
             # Create a checkpoint for the current model
             create_checkpoint(model = self.model,
                               optimizer = self.optimizer,
-                              model_init_params = self.model_init_params,
+                              trainig_init_params = self.model_init_params,
                               epoch = epoch,
                               checkpoints_dir = self.checkpoints_dir,
                               accuracy = new_score)

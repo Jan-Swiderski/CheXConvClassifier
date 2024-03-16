@@ -9,7 +9,7 @@ from torch.optim import Optimizer
 
 def create_checkpoint(model: nn.Module,
                       optimizer: Optimizer,
-                      model_init_params: dict,
+                      trainig_init_params: dict,
                       epoch:int,
                       checkpoints_dir:str,
                       accuracy: float):
@@ -24,7 +24,8 @@ def create_checkpoint(model: nn.Module,
     Params:
         model (nn.Module): PyTorch model to be saved.
         optimizer (Optimizer): PyTorch optimizer that optimizes the model.
-        model_init_params (dict): A dictionary containing parameters used to initialize or train the model.
+        trainig_init_params (dict): A dictionary containing all the information about the model type, optimizer type and their hyperparameters.
+                                    Training hyperparameters are included too.
         epoch (int): Current epoch number.
         checkpoints_dir (str): Path to the directory where checkpoints will be saved.
         accuracy (float): Model accuracy to be included in the checkpoint filename.
@@ -44,8 +45,8 @@ def create_checkpoint(model: nn.Module,
     checkpoint = {
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
-        'model_init_params': model_init_params,
-        'epoch': epoch + 1  # Adding 1 to the epoch number because PyTorch indexes epochs from 0.
+        'epoch': epoch + 1,  # Adding 1 to the epoch number because PyTorch indexes epochs from 0.
+        'trainig_init_params': trainig_init_params
     }
 
     try:
