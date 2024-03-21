@@ -1,7 +1,13 @@
 """
-This module provides functionality for creating a directory for model checkpoints based on the current date and time,
-and the type of model being trained. It is designed to ensure that each training session's checkpoints are stored
-in a unique directory to prevent data from being overwritten or mixed with data from other training sessions.
+This module is designed as a repository for utility functions 
+that streamline and facilitate various aspects of programming tasks. 
+Currently, it includes functionalities for organizing model training 
+checkpoints, with the potential for future expansion to include 
+additional utilities that aid in file management, data processing, 
+and other programming conveniences.
+
+The aim is to provide a centralized location for reusable code snippets 
+that improve workflow efficiency and project organization.
 """
 import os
 import time
@@ -34,6 +40,8 @@ def create_checkpoints_subdir(checkpoints_root:str,
         print("Cannot initiate training in an existing directory. "
               "This directory may contain files from previous training sessions, risking data structure corruption. "
               "Please verify the environmental variables and all specified paths before attempting another run.")
+        raise
     except Exception as e:
         # Handle any other unexpected errors that may occur during directory creation.
         print(f"An unexpected error occurred while creating the directory {checkpoints_dir}: {str(e)}")
+        raise

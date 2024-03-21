@@ -36,13 +36,13 @@ from torch import optim
 from torchvision import models
 from torchvision.models.mobilenetv3 import MobileNet_V3_Small_Weights
 from torchsummary import summary
-from modules.get_datasets import get_datasets
-from modules.get_dataloaders import get_dataloaders
-from modules.create_checkpoint import create_checkpoint
-from modules.epoch_train import epoch_train
-from modules.model_eval import model_eval
-from modules.early_stopping import EarlyStopping
-from modules.plot_losses import plot_losses
+from modules.dataset.get_datasets import get_datasets
+from modules.dataset.get_dataloaders import get_dataloaders
+from modules.training.create_checkpoint import create_checkpoint
+from modules.training.epoch_train import epoch_train
+from modules.evaluation.model_eval import model_eval
+from modules.training.early_stopping import EarlyStopping
+from modules.evaluation.plotting.plot_losses import plot_losses
 
 if __name__ == "__main__":
 

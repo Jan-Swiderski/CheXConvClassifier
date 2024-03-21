@@ -33,14 +33,14 @@ import torch
 from torch import nn
 from torch import optim
 from torchsummary import summary
-from modules.get_datasets import get_datasets
-from modules.get_dataloaders import get_dataloaders
-from modules.classifier import Classifier
-from modules.create_checkpoint import create_checkpoint
-from modules.epoch_train import epoch_train
-from modules.model_eval import model_eval
-from modules.early_stopping import EarlyStopping
-from modules.plot_losses import plot_losses
+from modules.dataset.get_datasets import get_datasets
+from modules.dataset.get_dataloaders import get_dataloaders
+from nets.classifier import CheXConvClassifier
+from modules.training.create_checkpoint import create_checkpoint
+from modules.training.epoch_train import epoch_train
+from modules.evaluation.model_eval import model_eval
+from modules.training.early_stopping import EarlyStopping
+from modules.evaluation.plotting.plot_losses import plot_losses
 
 if __name__ == "__main__":
 
@@ -151,7 +151,7 @@ if __name__ == "__main__":
                                                               test_batch_size = TEST_BATCH_SIZE)
     
     # Initialize the model with the specified architecture parameters.
-    net = Classifier(**train_init_params)
+    net = CheXConvClassifier(**train_init_params)
 
     net.to(device)
 

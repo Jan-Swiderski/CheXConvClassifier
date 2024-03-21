@@ -17,70 +17,50 @@ from torch import nn
 from torchvision import models
 from torchvision.models.mobilenetv3 import MobileNet_V3_Small_Weights, MobileNet_V3_Large_Weights
 
-# Defining keys required in the initialization dictionary for model customization.
-init_required_keys = ['model_type', 'in_channels','adapt_pretrained_weights_for_inchannels', 'freeze_dict','num_classes']
-
-# Defining keys required in the freeze configuration dictionary to specify which parts of the model to freeze.
-freeze_required_keys = ['first_conv_layer', 'middle_layers', 'classifier', 'classifier_out_layer']
-
 # Mapping between model size strings and their corresponding pretrained weight objects.
-weights_map = {'Small': MobileNet_V3_Small_Weights.DEFAULT,
-               'Large': MobileNet_V3_Large_Weights.DEFAULT}
+weights_map = {'mobilenet_v3_small': MobileNet_V3_Small_Weights.DEFAULT,
+               'mobilenet_v3_large': MobileNet_V3_Large_Weights.DEFAULT}
 
 # Mapping between model size strings and their corresponding function calls in torchvision.models.
-model_types_map = {'Small': models.mobilenet_v3_small,
-                   'Large': models.mobilenet_v3_large}
+model_types_map = {'mobilenet_v3_small': models.mobilenet_v3_small,
+                   'mobilenet_v3_large': models.mobilenet_v3_large}
 
 
-def get_model(model_init_params: dict):
+def get_model(model_type: str = "mobilenet_v3_small",
+              in_channels: int = 1,
+              adapt_pretrained_weights_for_inchannels: bool = True,
+              num_classes: int = 3,
+              freeze_first_clayer: bool = False,
+              freeze_middle_layers: bool = True,
+              freeze_classifier: bool = False,
+              freeze_class_out_layer: bool = False):
     """
-    Initializes and returns a MobileNet model (v3 small or large) with custom configurations.
+    Initializes and returns a MobileNet v3 model (either small or large) with custom configurations.
     
-    The function allows customization such as setting the number of input channels, adapting pretrained
-    weights for a different number of input channels than the default, freezing specified parts of the model,
-    and setting the number of output classes for the model's classifier.
-
+    This function allows for significant customization of the MobileNet v3 model, accommodating a variety of use cases.
+    Customization options include selecting the model size (small or large), setting the number of input channels and adapting 
+    pretrained weights for these channels, specifying the number of output classes, and selectively freezing components of the model.
+    
     Params:
-    - model_init_params (dict): A dictionary containing model initialization parameters. The expected keys and their
-      meanings are as follows:
-        - 'model_type': A string specifying the model type, either 'Small' or 'Large'.
-        - 'in_channels': An integer specifying the number of input channels for the model.
-        - 'adapt_pretrained_weights_for_inchannels': A boolean indicating whether to adapt pretrained weights
-          for the specified number of input channels as the mean of the pretrained first layers's weights.
-        - 'freeze_dict': A dictionary specifying which parts of the model to freeze. It should contain the following keys:
-                        - 'first_conv_layer': Boolean indicating whether to freeze the first convolutional layer.
-                        - 'middle_layers': Boolean indicating whether to freeze the middle layers of the model.
-                        - 'classifier': Boolean indicating whether to freeze the classifier layers of the model, excluding the last layer.
-                        - 'classifier_out_layer': Boolean indicating whether to freeze the output layer of the classifier.
-        - 'num_classes': An integer specifying the number of output classes for the classifier.
+        model_type (str): Specifies the model variant to initialize ('mobilenet_v3_small' or 'mobilenet_v3_large'). Default is 'mobilenet_v3_small'.
+        in_channels (int): The number of input channels for the model. Default is 1.
+        adapt_pretrained_weights_for_inchannels (bool): Whether to adapt pretrained weights for the specified number of input channels.
+                                                        The weights for each new channels will be set to mean of the pretrained weights if True. Default is True.
+        num_classes (int): The number of output classes for the model's classifier. Default is 3.
+        freeze_first_clayer (bool): If True, the first convolutional layer of the model will be frozen (weights will not be updated during training). Default is False.
+        freeze_middle_layers (bool): If True, all middle layers of the model will be frozen. Default is True.
+        freeze_classifier (bool): If True, the classifier layers, excluding the last layer, will be frozen. Default is False.
+        freeze_class_out_layer (bool): If True, the output layer of the classifier will be frozen. This parameter inversely affects the freezing of the classifier's output layer. Default is False.
 
     Returns:
-    - A PyTorch model (nn.Module) instance of the specified MobileNet version with the applied customizations.
-    
-    Raises:
-    - ValueError: If any required key is missing in `model_init_params` or `freeze_dict`.
+        A PyTorch model (nn.Module) instance of the specified MobileNet version with the applied customizations.
+        
+    Example:
+        To initialize a 'Large' MobileNet v3 model adapted for 3 input channels with pretrained weights, 10 output classes, and selective layer freezing, use:
+            model = get_model(model_type='Large', in_channels=3, num_classes=10, freeze_middle_layers=True, freeze_classifier=True, freeze_class_out_layer=False)
     """
-    # Checking for missing required keys in the initialization parameters.
-    init_missing_keys = [key for key in init_required_keys if key not in model_init_params]
-    if init_missing_keys:
-        raise ValueError(f"Missing required key(s) in model_init_params: {','.join(init_missing_keys)}")
     
-    # Normalizing the model type string to capitalize the first letter (e.g., 'small' -> 'Small').
-    model_type = model_init_params['model_type'].capitalize()
-
-    # Extracting other required parameters from the initialization dictionary.
-    in_channels = model_init_params['in_channels']
-    adapt_pretrained_weights_for_inchannels = model_init_params['adapt_pretrained_weights_for_inchannels']
-    freeze_dict = model_init_params['freeze_dict']
-    num_classes = model_init_params['num_classes']
-
-    # Checking for missing required keys in the freeze configuration dictionary.
-    freeze_missing_keys = [key for key in freeze_required_keys if key not in freeze_dict]
-
-    # Checking for missing required keys in the freeze configuration dictionary.
-    if freeze_missing_keys:
-        raise ValueError(f"Missing required key(s) in freeze_required_keys: {','.join(freeze_missing_keys)}")
-
+    model_type = model_type.lower()
 
     # Getting the appropriate pretrained weights based on the model type.
     weights = weights_map[model_type]
@@ -121,21 +101,21 @@ def get_model(model_init_params: dict):
     model.classifier[-1] = nn.Linear(last_layer_in_features, num_classes)
 
     # Freezing the specified parts of the model based on the freeze configuration dictionary.
-    if freeze_dict['first_conv_layer']:
+    if freeze_first_clayer:
         for parameter in model.features[0][0].parameters():
             parameter.requires_grad = False
 
-    if freeze_dict['middle_layers']:
+    if freeze_middle_layers:
         for layer_index in range(1, len(model.features)):
             for parameter in model.features[layer_index].parameters():
                 parameter.requires_grad = False
 
-    if freeze_dict['classifier']:
+    if freeze_classifier:
         for parameter in model.classifier.parameters():
             parameter.requires_grad = False
 
     # Unfreezing the classifier's output layer if specified.
-    if not freeze_dict['classifier_out_layer']:
+    if not freeze_class_out_layer:
         for parameter in model.classifier[-1].parameters():
             parameter.requires_grad = True
     

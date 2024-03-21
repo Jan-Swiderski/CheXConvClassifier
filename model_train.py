@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from modules.create_checkpoints_subdir import create_checkpoints_subdir
+from modules.utils import create_checkpoints_subdir
 
 
 if __name__ == "__main__":

@@ -1,19 +1,30 @@
 """
-This module serves as a central hub for dynamically creating and configuring machine learning models based on the given model type. 
-It utilizes a mapping between model type identifiers and module names that contain the actual model initialization logic. 
-Through this mapping, the `model_factory` function dynamically imports the necessary module and invokes a standard `get_model` function 
-defined within, passing any initialization parameters or checkpoints if provided. This approach facilitates flexibility and ease of 
-expansion for the project by abstracting model instantiation into a unified interface, which can be extended simply by adding new model 
-modules and updating the `models_map`.
+The `model_factory` module acts as a flexible, centralized hub for creating and configuring different machine learning models within the project.
+It abstracts model initialization into a single interface, enabling easy model switching and configuration.
+
+Through a `models_map` dictionary, this module maps model type identifiers to their respective module paths, facilitating dynamic model instantiation. 
+It supports the dynamic import and invocation of a standardized `get_model` function across various model modules,
+allowing for initialization with predefined parameters and optional checkpoint loading.
+
+The `model_factory` function is the core of this module, capable of handling model creation based on provided `model_type` 
+and optional initialization parameters or checkpoints. 
+Each model comes with a sensible set of default parameters, ensuring that specifying only the `model_type` is sufficient 
+for straightforward model initialization. This feature, along with the standardized function naming (`get_model`), 
+enhances the system's modularity and scalability, making it straightforward to extend with new model types.
+
+Main Features:
+- Simplifies model selection and instantiation across diverse architectures.
+- Supports default and custom initialization parameters, plus checkpoint loading for model flexibility.
+- Modular design facilitates easy addition and integration of new model types.
 """
+import importlib
 from typing import Optional
 import torch
-from .get_classifier import get_model as get_classifier
-from .get_mobilenet_v3 import get_model as get_mobilenet_v3
 
-models_map = {'classifier': get_classifier,
-              'mobilenet_v3_small': get_mobilenet_v3,
-              'mobilenet_v3_large': get_mobilenet_v3}
+
+models_map = {'chex_conv_classifier': "modules.nets.chex_conv_classifier",
+              'mobilenet_v3_small': "modules.nets.get_mobilenet_v3",
+              'mobilenet_v3_large': "modules.nets.get_mobilenet_v3"}
 
 
 def model_factory(model_init_params: Optional[dict] = None,
@@ -50,9 +61,10 @@ def model_factory(model_init_params: Optional[dict] = None,
 
         # Validate if the requested model type is supported.
         _validate_model_type(model_type)
-        
-        # Instantiate the model using provided initialization parameters.
-        model = models_map[model_type](model_init_params)
+
+        module = importlib.import_module(models_map[model_type])
+        model = module.get_model(**model_init_params)
+
         model.to(device) # Move the model to the appropriate device.
 
         return model
@@ -71,10 +83,10 @@ def model_factory(model_init_params: Optional[dict] = None,
         # Validate if the requested model type is supported.
         _validate_model_type(model_type)
 
-        # Instantiate the model using initialization parameters provided in the checkpoint.
-        # model = module.get_model(model_init_params)
-        model = models_map[model_type](model_init_params)
+        module = importlib.import_module(models_map[model_type])
 
+        # Instantiate the model using initialization parameters provided in the checkpoint.
+        model = module.get_model(**model_init_params)
         # Load model state from the checkpoint.
         model.load_state_dict(state_dict=checkpoint['model_state_dict'])
         

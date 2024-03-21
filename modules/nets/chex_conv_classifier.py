@@ -1,35 +1,57 @@
 """
-This module defines a custom convolutional neural network class called Classifier.
+Provides a CheXConvClassifier, a custom convolutional neural network designed for image classification of CheXpert Dataset images.
+Designed to work within the `model_factory` framework for easy integration and instantiation.
 """
 import math
 from torch import nn
 
-class Classifier(nn.Module):
+
+def get_model(**kwargs):
     """
-    A custom convolutional neural network (CNN) classifier.
-    This CNN consists of three convolutional layers followed by a ReLU activation function and a max pooling layer to reduce the spatial dimensions by half, and then two fully connected layers to produce the output predictions.
+    Initializes and returns an instance of CheXConvClassifier with the specified configurations.
+    
+    The CheXConvClassifier is a CNN tailored for image classification tasks, supporting custom configurations via keyword arguments.
+    It's structured with three convolutional layers, each followed by ReLU activation and max pooling, culminating in a fully connected output layer.
+
+    Keyword Args:
+        Any configuration parameters supported by CheXConvClassifier's constructor, including:
+        - l1_kernel_size (int): Kernel size for the first convolutional layer. Default: 5.
+        - l1_stride (int): Stride for the first convolutional layer. Default: 1.
+        - l1_out_chann (int): Number of output channels for the first convolutional layer. Default: 8.
+        - (Additional layer configurations follow the same pattern).
+        - im_size (tuple[int, int]): Expected input image size as (height, width). Default: (128, 128).
+
+    Returns:
+        An instance of CheXConvClassifier configured as per the provided keyword arguments.
+    """
+    return CheXConvClassifier(**kwargs)
+
+class CheXConvClassifier(nn.Module):
+    """
+    A custom convolutional neural network (CNN) called CheXConvClassifier.
+    This CNN consists of three convolutional layers followed by a ReLU activation function and a max pooling layer to reduce the spatial dimensions by half, 
+    and then the fully connected layer to produce the output predictions.
     NOTE: The input image is expected to have a single channel (e.g., grayscale).
     The network architecture is defined as follows:
     - Convolutional layer 1 -> ReLU -> Max Pooling
     - Convolutional layer 2 -> ReLU -> Max Pooling
     - Convolutional layer 3 -> ReLU -> Max Pooling
-    - Fully Connected layer -> ReLU
     - Output Fully Connected layer
     """
     def __init__(self,
-                 l1_kernel_size: int,
-                 l1_stride: int,
-                 l1_out_chann: int,
-                 l2_kernel_size: int,
-                 l2_stride: int,
-                 l2_out_chann: int,
-                 l3_kernel_size: int,
-                 l3_stride: int,
-                 l3_out_chann: int,
-                 fc_out_features: int,
-                 im_size: tuple[int, int]):
+                 l1_kernel_size: int = 5,
+                 l1_stride: int = 1,
+                 l1_out_chann: int = 8,
+                 l2_kernel_size: int = 3,
+                 l2_stride: int = 1,
+                 l2_out_chann: int = 16,
+                 l3_kernel_size: int = 3,
+                 l3_stride: int = 1,
+                 l3_out_chann: int = 32,
+                 im_size: tuple[int, int] = (128, 128),
+                 **kwargs):
         """
-    Initializes the classifier with specified configurations for each layer.
+        Initializes the CheXConvClassifier with specified configurations for each layer.
         
         Params:
             l1_kernel_size (int): Kernel size of the first convolutional layer.
@@ -40,14 +62,12 @@ class Classifier(nn.Module):
             l2_out_filters (int): Number of output filters for the second convolutional layer.
             l3_kernel_size (int): Kernel size of the third convolutional layer.
             l3_stride (int): Stride of the third convolutional layer.
-            l3_out_filters (int): Number of output filters for the third convolutional layer.
-            fc_out_features (int): Number of neurons in the output layer of the fully connected layer.
             im_size (tuple[int, int]): The size of the input image (height, width).
 
         NOTE: The input image is expected to have a single channel (e.g., grayscale).
 
         """
-        super(Classifier, self).__init__()
+        super(CheXConvClassifier, self).__init__()
         self.im_height, self.im_width = im_size
 
         # Calculate padding for convolutional layers to achieve 'same' padding effect.
@@ -78,8 +98,6 @@ class Classifier(nn.Module):
         # This calculation accounts for the dimensionality reduction due to 3 max pooling layers, each reducing height and width by half.
         self.fc_in_features = int((self.im_height / (2**3)) * (self.im_width / (2**3)) * l3_out_chann)
 
-        self.out_in_features = fc_out_features
-
         # Define the first convolutional layer using the given parameters.
         self.layer1conv = nn.Conv2d(in_channels = 1, # Assuming input images are grayscale
                                     out_channels = l1_out_chann,
@@ -99,11 +117,8 @@ class Classifier(nn.Module):
                                     kernel_size= l3_kernel_size,
                                     stride = l3_stride,
                                     padding = self.l3_s_padding)
-        
-        # Define the fully connected layer.
-        self.fc = nn.Linear(in_features = self.fc_in_features, out_features = fc_out_features)
 
-        self.out = nn.Linear(in_features = self.out_in_features, out_features = 3)
+        self.out = nn.Linear(in_features = self.fc_in_features, out_features = 3)
 
         # Define max pooling layer. Reduces the spatial size of the feature map by half.
         self.maxpool = nn.MaxPool2d(kernel_size = 2,

@@ -6,8 +6,8 @@ from torch.utils.data import DataLoader
 from torchvision.transforms import transforms
 from torchvision import models
 from torchvision.models.mobilenetv3 import MobileNet_V3_Large_Weights
-from modules.custom_chexpert_dataset import CheXpert
-from modules.model_eval import model_eval
+from modules.dataset.custom_chexpert_dataset import CheXpert
+from modules.evaluation.model_eval import model_eval
 
 if __name__ == "__main__":
     load_dotenv(dotenv_path = "./.env", override = True)
