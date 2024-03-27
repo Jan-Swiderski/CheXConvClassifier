@@ -25,7 +25,7 @@ class CheXpert(Dataset):
                  dinfo_filename:str,
                  images_dirname:str,
                  ram_buffer_size_mb: int = None,
-                 custom_size:tuple = (320, 320),
+                 custom_size:tuple[int, int] | list[int, int] = (128, 128),
                  to_grayscale:bool = True,
                  custom_transforms = None,
                  ):
@@ -44,7 +44,7 @@ class CheXpert(Dataset):
             by reducing disk I/O operations. If `None` or not enough memory is available, caching is disabled 
             and images are loaded on-the-fly. Default is None.
 
-            custom_size (tuple, optional): A tuple representing the custom image size (height, width). If None, resizing is disabled. Default is (320, 320).
+            custom_size tuple[int, int] | list[int, int]: A tuple or list representing the custom image size (height, width). If None, resizing is disabled. Default is (320, 320).
 
             to_grayscale(bool, optional): Whether to convert image to grayscale. Default is True.
 
@@ -65,6 +65,8 @@ class CheXpert(Dataset):
 
         # Append the given transform to the listbased on the user's choice. 
         if custom_size is not None:
+            if isinstance(custom_size, list):
+                custom_size = tuple(custom_size)
             transforms_list.append(transforms.Resize(size = custom_size))
         
         if to_grayscale:

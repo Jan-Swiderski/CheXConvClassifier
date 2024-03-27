@@ -1,0 +1,6 @@
+{
+    "TRAIN_DINFO_FILENAME": "small_train_data_info.csv",
+    "TRAIN_IMAGES_DIRNAME": "train_data",
+    "VALID_DINFO_FILENAME": "small_valid_data_info.csv",
+    "VALID_IMAGES_DIRNAME": "train_data"
+}

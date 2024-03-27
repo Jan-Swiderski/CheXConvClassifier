@@ -11,8 +11,8 @@ def create_checkpoint(model: nn.Module,
                       optimizer: Optimizer,
                       trainig_init_params: dict,
                       epoch:int,
-                      checkpoints_dir:str,
-                      accuracy: float):
+                      accuracy: float,
+                      checkpoints_dir:str):
     """
     Create and save a checkpoint of a PyTorch model and its optimizer.
 

@@ -26,7 +26,14 @@ def create_checkpoints_subdir(checkpoints_root:str,
     The function attempts to create the new directory and handles cases where the directory already exists or other
     unexpected errors occur.
 
-    No return value.
+    Returns:
+    - str: The path of the newly created checkpoints directory. This includes the root directory, current date and time,
+           and the model type, ensuring that the path is unique and organized. This path can be used by the calling
+           function to save checkpoints directly into the created subdirectory.
+
+    Raises:
+    - FileExistsError: If the directory already exists, indicating a potential risk of overwriting existing data.
+    - Exception: For any other unexpected errors that may occur during the creation of the directory.
     """
     # Construct the directory name using the current date and time and the model type.
     checkpoints_dir = os.path.join(checkpoints_root, f"{time.strftime('%Y-%m-%d_%H-%M')}_{model_type}")
@@ -45,3 +52,5 @@ def create_checkpoints_subdir(checkpoints_root:str,
         # Handle any other unexpected errors that may occur during directory creation.
         print(f"An unexpected error occurred while creating the directory {checkpoints_dir}: {str(e)}")
         raise
+
+    return checkpoints_dir

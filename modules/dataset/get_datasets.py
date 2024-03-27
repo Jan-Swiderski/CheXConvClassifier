@@ -1,68 +1,76 @@
 """
-Thins module defines the get_datasets function which creates and returns the training, validation and test dataset as
-instances of a custom CheXpert dataset class.
+This module provides functionality to load and prepare CheXpert datasets for model training, validation, and testing. 
+It defines a `get_datasets` function that instantiates and returns datasets for each phase, utilizing the custom 
+CheXpert dataset class for consistent data handling and transformations. 
 """
-import torchvision.transforms as transforms
+from typing import Optional
+from torchvision import transforms
 from .custom_chexpert_dataset import CheXpert
 
 def get_datasets(chexpert_root: str,
-                 train_dinfo_filename: str,
-                 train_images_dirname: str,
-                 valid_dinfo_filename: str,
-                 vaild_images_dirname: str,
-                 test_dinfo_filename: str,
-                 test_images_dirname: str,
                  ram_buffer_size_mb: int,
                  im_size: tuple[int, int],
-                 custom_transforms: callable = transforms.ToTensor()):
+                 custom_transforms: callable = transforms.ToTensor(),
+                 train_dinfo_filename: Optional[str] = None,
+                 train_images_dirname: Optional[str] = None,
+                 valid_dinfo_filename: Optional[str] = None,
+                 vaild_images_dirname: Optional[str] = None,
+                 test_dinfo_filename: Optional[str] = None,
+                 test_images_dirname: Optional[str] = None):
     """
-    Function get_Datasets creates training, validation, and test datasets. 
-    Each one is an instance of a custom CheXpert class.
-    
-    Params:
-    - chexpert_root (str): Root directory of CheXpert dataset.
-    - train_dinfo_filename (str): Name of the training dataset information file (csv).
-    - train_images_dirname (str): Directory containing training images.
-    - valid_dinfo_filename (str): Name of the validation dataset information file (csv).
-    - valid_images_dirname (str): Directory containing validation images.
-    - test_dinfo_filename (str): Name of the vtest dataset information file (csv).
-    - test_images_dirname (str): Directory containing test images.
-    - im_size (Tuple[int, int]): Tuple specifying the desired image size (height, width).
-    - custom_transforms (callable): A custom transform or list of transforms to apply to images. Has to be compatible with torchvision.transforms.
-                                    Default is torchvision.transforms.ToTensor().
+    Instantiates and returns training, validation, and test datasets for the CheXpert medical image dataset.
 
-    Returns:
-    - train_dataset (CheXpert): Training dataset as an instance of the CheXpert custom dataset.
-    - valid_dataset (CheXpert): Validation dataset as an instance of the CheXpert custom dataset.
-    - test_dataset (CheXpert): Test dataset as an instance of the CheXpert custom dataset.
-    """
+    Parameters:
+        chexpert_root (str): The root directory where the CheXpert dataset is stored.
+        ram_buffer_size_mb (int): Size of the RAM buffer for loading images, in megabytes.
+        im_size (tuple[int, int]): The target image size (height, width) for resizing images.
+        custom_transforms (callable): Transformation function(s) to apply to each image. Defaults to `ToTensor()`.
+        train_dinfo_filename (Optional[str]): Filename of CSV with training data info. None skips dataset creation.
+        train_images_dirname (Optional[str]): Subdirectory with training images. None skips dataset creation.
+        valid_dinfo_filename (Optional[str]): Filename of CSV with validation data info. None skips dataset creation.
+        vaild_images_dirname (Optional[str]): Subdirectory with validation images. None skips dataset creation.
+        test_dinfo_filename (Optional[str]): Filename of CSV with test data info. None skips dataset creation.
+        test_images_dirname (Optional[str]): Subdirectory with test images. None skips dataset creation.
 
-    # Initialize the training dataset
-    train_dataset = CheXpert(root_dir = chexpert_root,
-                        dinfo_filename = train_dinfo_filename,
-                        images_dirname = train_images_dirname,
-                        ram_buffer_size_mb = ram_buffer_size_mb,
-                        custom_size = im_size,
-                        to_grayscale = True,
-                        custom_transforms = custom_transforms)
-    
+        Returns:
+        Tuple[Optional[CheXpert], Optional[CheXpert], Optional[CheXpert]]:
+        - train_dataset (CheXpert or None): Initialized training dataset if both `train_dinfo_filename` and 
+          `train_images_dirname` are provided, else None.
+        - valid_dataset (CheXpert or None): Initialized validation dataset if both `valid_dinfo_filename` and 
+          `vaild_images_dirname` are provided, else None.
+        - test_dataset (CheXpert or None): Initialized test dataset if both `test_dinfo_filename` and 
+          `test_images_dirname` are provided, else None.
+"""
+    train_dataset = valid_dataset = test_dataset = None
 
-    # Initialize the validation dataset
-    valid_dataset = CheXpert(root_dir = chexpert_root,
-                            dinfo_filename = valid_dinfo_filename,
-                            images_dirname = vaild_images_dirname,
+    # Initialize the training dataset with provided parameters, converting images to grayscale and applying custom transformations
+    if train_dinfo_filename and train_images_dirname:
+        train_dataset = CheXpert(root_dir = chexpert_root,
+                            dinfo_filename = train_dinfo_filename,
+                            images_dirname = train_images_dirname,
                             ram_buffer_size_mb = ram_buffer_size_mb,
                             custom_size = im_size,
                             to_grayscale = True,
                             custom_transforms = custom_transforms)
-
-    # Initialize the test dataset
-    test_dataset = CheXpert(root_dir = chexpert_root,
-                            dinfo_filename = test_dinfo_filename,
-                            images_dirname = test_images_dirname,
-                            ram_buffer_size_mb = ram_buffer_size_mb,
-                            custom_size = im_size,
-                            to_grayscale = True,
-                            custom_transforms = custom_transforms)
+        
+    # Similar initialization for validation and test datasets.
+    
+    if valid_dinfo_filename and vaild_images_dirname:
+        valid_dataset = CheXpert(root_dir = chexpert_root,
+                                dinfo_filename = valid_dinfo_filename,
+                                images_dirname = vaild_images_dirname,
+                                ram_buffer_size_mb = ram_buffer_size_mb,
+                                custom_size = im_size,
+                                to_grayscale = True,
+                                custom_transforms = custom_transforms)
+        
+    if test_dinfo_filename and test_images_dirname:
+        test_dataset = CheXpert(root_dir = chexpert_root,
+                                dinfo_filename = test_dinfo_filename,
+                                images_dirname = test_images_dirname,
+                                ram_buffer_size_mb = ram_buffer_size_mb,
+                                custom_size = im_size,
+                                to_grayscale = True,
+                                custom_transforms = custom_transforms)
     
     return train_dataset, valid_dataset, test_dataset

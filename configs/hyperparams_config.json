@@ -1,0 +1,10 @@
+{
+    "learning_rate": 0.001,
+    "max_epochs": 50,
+    "train_batch_size": 64,
+    "valid_batch_size": 64,
+    "patience": 5,
+    "min_improvement": 0.5,
+    "min_mem_av_mb": 1024,
+    "im_size": [128, 128]
+}

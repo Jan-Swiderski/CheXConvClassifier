@@ -48,7 +48,7 @@ class CheXConvClassifier(nn.Module):
                  l3_kernel_size: int = 3,
                  l3_stride: int = 1,
                  l3_out_chann: int = 32,
-                 im_size: tuple[int, int] = (128, 128),
+                 im_size: tuple[int, int] | list[int, int] = (128, 128),
                  **kwargs):
         """
         Initializes the CheXConvClassifier with specified configurations for each layer.
@@ -62,13 +62,15 @@ class CheXConvClassifier(nn.Module):
             l2_out_filters (int): Number of output filters for the second convolutional layer.
             l3_kernel_size (int): Kernel size of the third convolutional layer.
             l3_stride (int): Stride of the third convolutional layer.
-            im_size (tuple[int, int]): The size of the input image (height, width).
+            im_size (tuple[int, int] | list[int, int]): The size of the input image (height, width).
 
         NOTE: The input image is expected to have a single channel (e.g., grayscale).
 
         """
         super(CheXConvClassifier, self).__init__()
-        self.im_height, self.im_width = im_size
+
+        self.im_height = im_size[0]
+        self.im_width = im_size[1]
 
         # Calculate padding for convolutional layers to achieve 'same' padding effect.
         self.l1_s_padding = self.calculate_same_padding(im_height = self.im_height,
@@ -198,10 +200,6 @@ class CheXConvClassifier(nn.Module):
         # Flatten the output tensor to prepare it for the fully connected layer, preserving the batch dimension.
         out = out.view(out.size(0), self.fc_in_features)
 
-        # Forward pass through the first fully connected layer, followed by ReLU activation.        
-        out = self.fc(out)
-        out = self.relu(out)
-        
         # Forward pass through the out fully connected layer which produces the final outcome.
         out = self.out(out)
         return out
