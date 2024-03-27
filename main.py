@@ -1,5 +1,5 @@
 import argparse
-from model_train import model_train
+from modules.orchestrators.model_train import model_train
 
 supported_models = ["chex_conv_classifier", "mobilenet_v3_small", "mobilenet_v3_large"]
 
