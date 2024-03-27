@@ -37,6 +37,7 @@ and the training logic, promoting a structured and maintainable codebase.
 """
 import json
 import torch
+from typing import Optional
 from torch import nn
 from torchsummary import summary
 from modules.utils import create_checkpoints_subdir
@@ -52,23 +53,25 @@ from modules.training.early_stopping import EarlyStopping
 
 def model_train(model_type: str,
                 dataset_root: str,
-                checkpoints_root: str,
-                model_config_json_path: str,
-                optim_config_json_path: str,
-                hyperparams_json_path: str,
-                filenames_config_json_path: str
-                ):
+                checkpoint: str,
+                optim_config: str,
+                hyperparams: str,
+                filenames_config: str,
+                model_config: Optional[str] = None,
+                **kwargs):
     """
     Orchestrates the training pipeline for a specified model type.
 
     Params:
         model_type (str): The type of model to train.
         dataset_root (str): Root directory path of the dataset.
-        checkpoints_root (str): Root directory path for saving model checkpoints.
-        model_config_json_path (str): Path to the model configuration JSON file.
-        optim_config_json_path (str): Path to the optimizer configuration JSON file.
-        hyperparams_json_path (str): Path to the hyperparameters JSON file.
-        filenames_config_json_path (str): Path to the filenames configuration JSON file.
+        checkpoins_root (str): Root directory path for saving model checkpoints.
+        optim_config (str): Path to the optimizer configuration JSON file.
+        hyperparams (str): Path to the hyperparameters JSON file.
+        filenames_config (str): Path to the filenames configuration JSON file.
+        model_config_ (Optional[str]): Path to the model configuration JSON file. Default is None.
+                                                If no model configuration path is provided, the model will be intialized
+                                                with the default parameters, broadly desribed in README.md
 
     This function integrates various stages of the training process: loading
     and preprocessing datasets, model initialization, optimizer setup, conducting
@@ -76,17 +79,22 @@ def model_train(model_type: str,
     and plotting training/validation loss graphs. It leverages external utility
     functions and classes for detailed operations within these stages.
     """
-    # Load configuration files for model, optimizer, hyperparameters, and dataset filenames.
-    with open(model_config_json_path, 'r') as model_config_json:
-        model_config_dict = json.load(model_config_json)
-    
-    with open(optim_config_json_path, 'r') as optim_config_json:
+    # Load configuration files for model (if path provided), optimizer, hyperparameters, and dataset filenames.
+    if model_config is not None:
+        with open(model_config, 'r') as model_config_json:
+            model_config_dict = json.load(model_config_json)
+    else:
+        # If path for model configuration is not provided,
+        # initialize the configuration dictionary for proper model preparation.
+        model_config_dict = {}
+
+    with open(optim_config, 'r') as optim_config_json:
         optim_config_dict = json.load(optim_config_json)
 
-    with open(hyperparams_json_path, 'r') as hyperparams_json:
+    with open(hyperparams, 'r') as hyperparams_json:
         hyperparams_dict = json.load(hyperparams_json)
 
-    with open(filenames_config_json_path, 'r') as filenames_config_json:
+    with open(filenames_config, 'r') as filenames_config_json:
         filenames_dict = json.load(filenames_config_json)
 
         
@@ -101,7 +109,8 @@ def model_train(model_type: str,
     min_improvement = hyperparams_dict["min_improvement"]
     min_mem_av_mb = hyperparams_dict["min_mem_av_mb"]
     im_size = hyperparams_dict['im_size']
-    # Update model configuration with dynamic parameters.
+
+    # Update model configuration dictionary with dynamic parameters.
     model_config_dict['model_type'] = model_type
     model_config_dict['im_size'] = im_size
 
@@ -115,7 +124,7 @@ def model_train(model_type: str,
                             'optimizer_init_params': optimizer_init_params}
     
     # Create a subdirectory in checkpoints root directory for storing checkpoints.
-    checkpoints_dir = create_checkpoints_subdir(checkpoints_root=checkpoints_root,
+    checkpoints_dir = create_checkpoints_subdir(checkpoints_root=checkpoint,
                               model_type=model_type)
     
     # Prepare datasets and dataloaders for training and validation.

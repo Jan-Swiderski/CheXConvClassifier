@@ -11,9 +11,9 @@ parser.add_argument('mode', type=str, choices=['train', 'validate', 'test'], hel
 
 parser.add_argument('dataset_root', type=str, help="Path to the dataset root directory.")
 
-parser.add_argument('-c', '--checkpoint', type=str, required=True, help="Path to checkpoints root in 'train' modde or path to the checkpoint file in 'validate' or 'test' mode.")
+parser.add_argument('checkpoint', type=str, help="Path to checkpoints root in 'train' modde or path to the checkpoint file in 'validate' or 'test' mode.")
 
-parser.add_argument('-m', '--model_config', type=str, help="Path to the chosen model's config JSON.")
+parser.add_argument('-m', '--model_config', type=str, help="Path to the chosen model's config JSON. If not provided, the model will be intialized with the default parameters, broadly desribed in README.md")
 
 parser.add_argument('-o', '--optim_config', type=str, default="./configs/optimizer_config.json", help="Path to the optimizer's config JSON. Use only in 'train' mode.")
 
@@ -23,12 +23,7 @@ parser.add_argument('-f', '--filenames_config', type=str, default='./configs/fil
 
 args = parser.parse_args()
 
+args_dict = vars(args)
+
 if args.mode == "train":
-    model_train(model_type=args.model_type,
-                dataset_root=args.dataset_root,
-                checkpoints_root=args.checkpoint,
-                model_config_json_path=args.model_config,
-                optim_config_json_path=args.optim_config,
-                hyperparams_json_path=args.hyperparams,
-                filenames_config_json_path=args.filenames_config
-                )
+    model_train(**args_dict)
