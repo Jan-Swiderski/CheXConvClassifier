@@ -49,6 +49,10 @@ from modules.training.epoch_train import epoch_train
 from modules.evaluation.model_eval import model_eval
 from modules.training.create_checkpoint import create_checkpoint
 from modules.evaluation.plotting.plot_losses import plot_losses
+from modules.evaluation.metrics.confusion_matrix import ConfusionMatrix
+from modules.evaluation.metrics.metric_strategies.accuracy_strategy import AccurracyStrategy
+from modules.evaluation.metrics.metric_strategies.precision_strategy import PrecisionStrategy
+from modules.evaluation.metrics.metric_strategies.recall_strategy import RecallStrategy
 from modules.training.early_stopping import EarlyStopping
 
 def model_train(model_type: str,
@@ -167,14 +171,25 @@ def model_train(model_type: str,
         # Display the model's architecture and parameter count for the specified input size.
         summary(model, (1, im_size[0], im_size[1]))
 
-    print("Starting training...")
-        
+    # Get labels dict from the dataset
+    labels_dict = valid_dataset.get_labels()
+
+    # Instantiate the confusion matrix and the metric strategies
+    confusion_matrix = ConfusionMatrix(labels_dict=labels_dict)
+    accuracy_strategy = AccurracyStrategy(labels_dict=labels_dict)
+    precision_strategy = PrecisionStrategy(labels_dict=labels_dict)
+    recall_strategy = RecallStrategy(labels_dict=labels_dict)
+    
+    # Set the metric strategies for later calculation
+    confusion_matrix.set_metric_strategy([accuracy_strategy, precision_strategy, recall_strategy])
+    
     # Initialize lists to store loss metrics for visualization.
     train_epoch_losses = []  # To store training loss after each epoch.
     val_total_losses = []  # To store validation loss after each epoch.
     train_av_losses = []  # To store average training loss.
     val_batch_losses = []  # To store batch-wise validation loss.
 
+    print("Starting training...")
     # Training loop: iterates over the number of specified epochs.
     for epoch in range(max_epochs):
         print("\n") # New line for readability between epochs in output.
@@ -188,12 +203,17 @@ def model_train(model_type: str,
                                                     max_epochs = max_epochs)
         
         # Perform validation, returning total loss, batch losses, and accuracy.
-        val_total_loss, val_batch_loss, val_accuracy = model_eval(model = model, 
+        val_total_loss, val_batch_loss, val_metrics = model_eval(model = model, 
                                                                     criterion = criterion,
-                                                                    dataloader = valid_loader)
+                                                                    dataloader = valid_loader,
+                                                                    confusion_matrix=confusion_matrix)
+        
+        # Extract validation accuracy from the tuple
+        val_accuracy, _, _ = val_metrics
 
-        # Log validation accuracy for the current epoch.
-        print(f"Validiation accuracy at epoch {epoch + 1}: {val_accuracy:.4f}%")
+        # Print validation metrics for current epoch
+        print(f"Validation metrics for epoch {epoch+1}/{max_epochs}:")
+        confusion_matrix.print_metric()
 
         # Append losses for future plotting.
         train_epoch_losses.append(train_epoch_loss)

@@ -111,3 +111,6 @@ class CheXpert(Dataset):
         if self.transforms:
             image = self.transforms(image)
         return image, label
+    
+    def get_labels(self):
+        return self.labels

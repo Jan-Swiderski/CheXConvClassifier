@@ -5,10 +5,12 @@ neural network model.
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
+from .metrics.confusion_matrix import ConfusionMatrix
 
 def model_eval(model: nn.Module,
                dataloader: DataLoader,
-               criterion: nn.Module):
+               criterion: nn.Module,
+               confusion_matrix: ConfusionMatrix):
 
     """
     Evaluate a PyTorch neural network model on a given DataLoader.
@@ -22,16 +24,16 @@ def model_eval(model: nn.Module,
         dataloader (DataLoader): DataLoader containing the dataset for evaluation.
                                  It provides batches of data (images and labels) for evaluation.
         criterion (nn.Module): The loss function used for calculating the loss.
+        confusion_metrix (ConfusionMatrix): The confusion matrix used to calculate metrics. 
+                                            The metric strategies need to be set before calling this function!
 
     Returns:
             - total_loss (float): The total loss on the dataset.
             - av_loss (float): The average loss per batch.
-            - accuracy (float): The accuracy of the model on the dataset, expressed as a percentage.
+            - calculated_metrics (tuple): Metrcis calculated using the confusion matrix.
     """
     # Set the model to evaluation mode.
     model.eval()
-    correct_preds = 0  # To count the number of correct predictions.
-    total_preds = 0    # To count the total number of predictions made.
     total_loss = 0.0
     
     # Disable gradient calculations.
@@ -51,19 +53,13 @@ def model_eval(model: nn.Module,
             # which represents the predicted label.
             _, predictions = torch.max(outputs, 1)
 
-            # Update the total number of predictions made.
-            total_preds += labels.size(0)
-
-            # Update the number of correct predictions.
-            correct_preds += (predictions == labels).sum().item()
+            confusion_matrix.step(ground_truth=labels,
+                                  quantized_preds=predictions)
 
     # Calculate the average loss per each batch.
     av_loss = total_loss / len(dataloader)
 
-    # Calculate the accuracy as a percentage.
-    accuracy = float(100 * correct_preds / total_preds)
+    # Calculate the metrics using the confusion matrix
+    calculated_metrics = tuple(confusion_matrix.calculate_metric(as_percentage=True, as_dict=False))
 
-    # Print the validation accuracy.
-    # print(f'Validation accuracy: {accuracy:.2f}%')
-
-    return total_loss, av_loss, accuracy
+    return total_loss, av_loss, calculated_metrics
