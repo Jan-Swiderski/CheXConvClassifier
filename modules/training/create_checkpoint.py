@@ -46,7 +46,7 @@ def create_checkpoint(model: nn.Module,
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
         'epoch': epoch + 1,  # Adding 1 to the epoch number because PyTorch indexes epochs from 0.
-        'trainig_init_params': trainig_init_params
+        'training_init_params': trainig_init_params
     }
 
     try:

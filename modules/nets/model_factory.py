@@ -22,9 +22,9 @@ from typing import Optional
 import torch
 
 
-models_map = {'chex_conv_classifier': "modules.nets.chex_conv_classifier",
-              'mobilenet_v3_small': "modules.nets.get_mobilenet_v3",
-              'mobilenet_v3_large': "modules.nets.get_mobilenet_v3"}
+models_map = {'chex_conv_classifier': "chex_conv_classifier",
+              'mobilenet_v3_small': "get_mobilenet_v3",
+              'mobilenet_v3_large': "get_mobilenet_v3"}
 
 
 def model_factory(model_init_params: Optional[dict] = None,
@@ -64,19 +64,16 @@ def model_factory(model_init_params: Optional[dict] = None,
 
         module = importlib.import_module(models_map[model_type])
         model = module.get_model(**model_init_params)
-
         model.to(device) # Move the model to the appropriate device.
-
-        return model
-        
+        return model     
     else:
         # Initialize model with a checkpoint.
 
         # Extracting training initialization parameters from the checkpoint.
-        trainig_init_params = checkpoint['training_init_params']
+        training_init_params = checkpoint['training_init_params']
 
         # Extracting model initialization parameters from the training initialization parameters stored in the checkpoint.
-        model_init_params = trainig_init_params['model_init_params']
+        model_init_params = training_init_params['model_init_params']
 
         model_type = model_init_params['model_type']
         

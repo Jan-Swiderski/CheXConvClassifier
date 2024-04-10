@@ -1,5 +1,7 @@
 import argparse
 from modules.orchestrators.model_train import model_train
+from modules.orchestrators.model_validate import model_validate
+from modules.orchestrators.model_test import model_test
 
 supported_models = ["chex_conv_classifier", "mobilenet_v3_small", "mobilenet_v3_large"]
 
@@ -21,9 +23,15 @@ parser.add_argument('-p', '--hyperparams', type=str, default="./configs/hyperpar
 
 parser.add_argument('-f', '--filenames_config', type=str, default='./configs/filenames_config.json', help="Path to the filenames config JSON.")
 
+parser.add_argument('-t', '--triplicate_channel', action='store_true', help="Enables triplicating the input image tensor. Use if the model is configured to require three input channels instead of one.")
+
 args = parser.parse_args()
 
 args_dict = vars(args)
 
 if args.mode == "train":
     model_train(**args_dict)
+elif args.mode == "validate":
+    model_validate(**args_dict)
+elif args.mode ==("test"):
+    model_test(**args_dict)

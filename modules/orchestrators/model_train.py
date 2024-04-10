@@ -28,9 +28,8 @@ with appropriate arguments. It then calls the `model_train` function from this m
 passing the parsed arguments to configure and start the training session.
 
 For example:
-python main.py mobilenet_v3_small train /path/to/dataset -c /path/to/checkpoints \
-              -m /path/to/model_config.json -o /path/to/optim_config.json \
-              -p /path/to/hyperparams.json -f /path/to/filenames_config.json
+python main.py mobilenet_v3_small train /path/to/dataset /path/to/checkpoints_root \
+              -m /path/to/model_config.json
 
 This modular approach facilitates a clear separation between the command-line interface
 and the training logic, promoting a structured and maintainable codebase.
@@ -43,7 +42,7 @@ from torchsummary import summary
 from modules.utils import create_checkpoints_subdir
 from modules.dataset.get_datasets import get_datasets
 from modules.dataset.get_dataloaders import get_dataloaders
-from modules.model_factory import model_factory
+from modules.nets.model_factory import model_factory
 from modules.optimizer_factory import optimizer_factory
 from modules.training.epoch_train import epoch_train
 from modules.evaluation.model_eval import model_eval
@@ -61,6 +60,7 @@ def model_train(model_type: str,
                 optim_config: str,
                 hyperparams: str,
                 filenames_config: str,
+                triplicate_channel: bool,
                 model_config: Optional[str] = None,
                 **kwargs):
     """
@@ -101,7 +101,6 @@ def model_train(model_type: str,
     with open(filenames_config, 'r') as filenames_config_json:
         filenames_dict = json.load(filenames_config_json)
 
-        
     # Extract specific configurations and hyperparameters for easy access.
     train_dinfo_filename, train_images_dirname = filenames_dict['TRAIN_DINFO_FILENAME'], filenames_dict['TRAIN_IMAGES_DIRNAME']
     valid_dinfo_filename, valid_images_dirname = filenames_dict['VALID_DINFO_FILENAME'], filenames_dict['VALID_IMAGES_DIRNAME']
@@ -169,7 +168,10 @@ def model_train(model_type: str,
     
     with torch.no_grad(): # Prevent tracking history in autograd.
         # Display the model's architecture and parameter count for the specified input size.
-        summary(model, (1, im_size[0], im_size[1]))
+        if triplicate_channel:
+            summary(model, (3, im_size[0], im_size[1]))
+        else:
+            summary(model, (1, im_size[0], im_size[1]))
 
     # Get labels dict from the dataset
     labels_dict = valid_dataset.get_labels()
@@ -200,13 +202,15 @@ def model_train(model_type: str,
                                                     optimizer = optimizer,
                                                     criterion = criterion,
                                                     epoch = epoch,
-                                                    max_epochs = max_epochs)
+                                                    max_epochs = max_epochs,
+                                                    triplicate_channel=triplicate_channel)
         
         # Perform validation, returning total loss, batch losses, and accuracy.
         val_total_loss, val_batch_loss, val_metrics = model_eval(model = model, 
                                                                     criterion = criterion,
                                                                     dataloader = valid_loader,
-                                                                    confusion_matrix=confusion_matrix)
+                                                                    confusion_matrix=confusion_matrix,
+                                                                    triplicate_channel=triplicate_channel)
         
         # Extract validation accuracy from the tuple
         val_accuracy, _, _ = val_metrics

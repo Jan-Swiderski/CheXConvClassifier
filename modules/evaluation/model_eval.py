@@ -10,7 +10,9 @@ from .metrics.confusion_matrix import ConfusionMatrix
 def model_eval(model: nn.Module,
                dataloader: DataLoader,
                criterion: nn.Module,
-               confusion_matrix: ConfusionMatrix):
+               confusion_matrix: ConfusionMatrix,
+               triplicate_channel: bool = False,
+               get_incorrect_indexes: bool = False):
 
     """
     Evaluate a PyTorch neural network model on a given DataLoader.
@@ -26,6 +28,7 @@ def model_eval(model: nn.Module,
         criterion (nn.Module): The loss function used for calculating the loss.
         confusion_metrix (ConfusionMatrix): The confusion matrix used to calculate metrics. 
                                             The metric strategies need to be set before calling this function!
+        triplicate_channel (bool): If True, input tensors are triplicated along the channel dimension.
 
     Returns:
             - total_loss (float): The total loss on the dataset.
@@ -35,12 +38,17 @@ def model_eval(model: nn.Module,
     # Set the model to evaluation mode.
     model.eval()
     total_loss = 0.0
+    incorrect_indexes = []
     
     # Disable gradient calculations.
     with torch.no_grad():
 
         # Iterate over the validation data.
-        for images, labels in dataloader:
+        for i, (images, labels) in enumerate(dataloader):
+
+            if triplicate_channel:
+            # Triplicate the images along the channel dimension.
+                images = images.repeat(1, 3, 1, 1)
             
             # Forward pass: compute the model output for the batch.
             outputs = model(images)
@@ -55,11 +63,22 @@ def model_eval(model: nn.Module,
 
             confusion_matrix.step(ground_truth=labels,
                                   quantized_preds=predictions)
+            if get_incorrect_indexes:
+
+                incorrect_preds = predictions != labels
+
+                incorrect_batch_indexes = [idx for idx, correct in enumerate(incorrect_preds) if correct]
+
+                global_indexes = [i*dataloader.batch_size + idx for idx in incorrect_batch_indexes]
+
+                incorrect_indexes.extend(global_indexes)
 
     # Calculate the average loss per each batch.
     av_loss = total_loss / len(dataloader)
 
     # Calculate the metrics using the confusion matrix
     calculated_metrics = tuple(confusion_matrix.calculate_metric(as_percentage=True, as_dict=False))
-
-    return total_loss, av_loss, calculated_metrics
+    if get_incorrect_indexes:
+        return total_loss, av_loss, calculated_metrics, incorrect_indexes
+    else:
+        return total_loss, av_loss, calculated_metrics

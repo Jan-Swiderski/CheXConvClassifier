@@ -33,7 +33,8 @@ def get_model(model_type: str = "mobilenet_v3_small",
               freeze_first_clayer: bool = False,
               freeze_middle_layers: bool = True,
               freeze_classifier: bool = False,
-              freeze_class_out_layer: bool = False):
+              freeze_class_out_layer: bool = False,
+              **kwargs):
     """
     Initializes and returns a MobileNet v3 model (either small or large) with custom configurations.
     

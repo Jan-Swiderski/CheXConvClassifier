@@ -2,7 +2,7 @@
 This module defines the epoch_train funtion which performs an epoch of training
 of a given PyTorch neural network using the given dataloader, optimizer and criterion.
 """
-from torch import nn
+from torch import nn, cat
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 
@@ -11,7 +11,8 @@ def epoch_train(model: nn.Module,
                 optimizer: Optimizer,
                 criterion: nn.Module,
                 epoch: int,
-                max_epochs: int):
+                max_epochs: int,
+                triplicate_channel: bool = False):
     
     """
     This function handles the training loop for a neural network model. It iterates over the dataset,
@@ -31,6 +32,8 @@ def epoch_train(model: nn.Module,
     epoch (int): The current epoch number during training.
     
     max_epochs (int): The total number of epochs for training.
+
+    triplicate_channel (bool): If True, input tensors are triplicated along the channel dimension.
     """
     # Set the model to training mode.
     model.train()
@@ -41,6 +44,10 @@ def epoch_train(model: nn.Module,
     # Iterate over the training data.
     for images, labels in train_loader:
         
+        if triplicate_channel:
+            # Triplicate the images along the channel dimension.
+            images = images.repeat(1, 3, 1, 1)
+            
         # Zero the gradients before forward pass.
         optimizer.zero_grad()
 
