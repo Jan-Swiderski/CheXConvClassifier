@@ -48,9 +48,8 @@ from modules.evaluation.metrics import *
 
 def model_test(dataset_root: str,
                checkpoint: str,
-               hyperparams: str,
                filenames_config: str,
-               triplicate_channel: bool,
+               batch_size: int,
                **kwargs):
     """
     Conducts the testing phase on a given dataset using a model loaded from a specified
@@ -76,18 +75,12 @@ def model_test(dataset_root: str,
     training_init_params = checkpoint_dict["training_init_params"]
     model_init_params = training_init_params["model_init_params"]
 
-    with open(hyperparams, "r") as hyperparams_json:
-        hyperparams_dict = json.load(hyperparams_json)
-
     with open(filenames_config, "r") as filenames_config_json:
         filenames_dict = json.load(filenames_config_json)
 
     test_dinfo_filename, test_images_dirname = filenames_dict["TEST_DINFO_FILENAME"], filenames_dict["TEST_IMAGES_DIRNAME"]
-    
-    test_batch_size = hyperparams_dict["test_batch_size"]
-    min_mem_av_mb = hyperparams_dict["min_mem_av_mb"]
     im_size = model_init_params["im_size"]
-
+    triplicate_channel = training_init_params['training_hyperparams']['triplicate_channel']
     model = model_factory(checkpoint=checkpoint_dict)
 
     if triplicate_channel:
@@ -98,17 +91,15 @@ def model_test(dataset_root: str,
     test_dataset_tensors = CheXpert(root_dir=dataset_root,
                                     dinfo_filename=test_dinfo_filename,
                                     images_dirname=test_images_dirname,
-                                    ram_buffer_size_mb=min_mem_av_mb,
                                     custom_size=im_size,
                                     custom_transforms=transforms.ToTensor())
     
     test_dataset_pil = CheXpert(root_dir=dataset_root,
                                 dinfo_filename=test_dinfo_filename,
                                 images_dirname=test_images_dirname,
-                                ram_buffer_size_mb=min_mem_av_mb,
                                 custom_size=im_size)
     
-    test_loader = DataLoader(dataset=test_dataset_tensors, batch_size=test_batch_size,
+    test_loader = DataLoader(dataset=test_dataset_tensors, batch_size=batch_size,
                              shuffle=False)
     
     criterion = nn.CrossEntropyLoss() 

@@ -21,10 +21,9 @@ import importlib
 from typing import Optional
 import torch
 
-
-models_map = {'chex_conv_classifier': "chex_conv_classifier",
-              'mobilenet_v3_small': "get_mobilenet_v3",
-              'mobilenet_v3_large': "get_mobilenet_v3"}
+models_map = {'chex_conv_classifier': "modules.nets.chex_conv_classifier",
+              'mobilenet_v3_small': "modules.nets.get_mobilenet_v3",
+              'mobilenet_v3_large': "modules.nets.get_mobilenet_v3"}
 
 
 def model_factory(model_init_params: Optional[dict] = None,
@@ -99,4 +98,3 @@ def _validate_model_type(model_type):
     # Validate if the requested model type is supported.
     if model_type not in models_map:
         raise ValueError(f"Model type of {model_type} is not supported")
-

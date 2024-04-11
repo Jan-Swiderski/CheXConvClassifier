@@ -1,8 +1,8 @@
 {
-    "TRAIN_DINFO_FILENAME": "final_train_data_info.csv",
+    "TRAIN_DINFO_FILENAME": "small_train_data_info.csv",
     "TRAIN_IMAGES_DIRNAME": "train_data",
-    "VALID_DINFO_FILENAME": "final_valid_data_info.csv",
+    "VALID_DINFO_FILENAME": "small_valid_data_info.csv",
     "VALID_IMAGES_DIRNAME": "train_data",
-    "TEST_DINFO_FILENAME": "final_test_data_info.csv",
+    "TEST_DINFO_FILENAME": "small_test_data_info.csv",
     "TEST_IMAGES_DIRNAME": "train_data"
 }

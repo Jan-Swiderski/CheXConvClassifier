@@ -5,7 +5,7 @@ neural network model.
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
-from .metrics.confusion_matrix import ConfusionMatrix
+from .metrics import ConfusionMatrix
 
 def model_eval(model: nn.Module,
                dataloader: DataLoader,

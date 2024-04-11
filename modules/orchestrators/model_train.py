@@ -56,7 +56,7 @@ from modules.training.early_stopping import EarlyStopping
 
 def model_train(model_type: str,
                 dataset_root: str,
-                checkpoint: str,
+                checkpoints_root: str,
                 optim_config: str,
                 hyperparams: str,
                 filenames_config: str,
@@ -94,10 +94,8 @@ def model_train(model_type: str,
 
     with open(optim_config, 'r') as optim_config_json:
         optim_config_dict = json.load(optim_config_json)
-
     with open(hyperparams, 'r') as hyperparams_json:
         hyperparams_dict = json.load(hyperparams_json)
-
     with open(filenames_config, 'r') as filenames_config_json:
         filenames_dict = json.load(filenames_config_json)
 
@@ -112,7 +110,7 @@ def model_train(model_type: str,
     min_improvement = hyperparams_dict["min_improvement"]
     min_mem_av_mb = hyperparams_dict["min_mem_av_mb"]
     im_size = hyperparams_dict['im_size']
-
+    hyperparams_dict['triplicate_channel'] = triplicate_channel
     # Update model configuration dictionary with dynamic parameters.
     model_config_dict['model_type'] = model_type
     model_config_dict['im_size'] = im_size
@@ -127,7 +125,7 @@ def model_train(model_type: str,
                             'optimizer_init_params': optimizer_init_params}
     
     # Create a subdirectory in checkpoints root directory for storing checkpoints.
-    checkpoints_dir = create_checkpoints_subdir(checkpoints_root=checkpoint,
+    checkpoints_dir = create_checkpoints_subdir(checkpoints_root=checkpoints_root,
                               model_type=model_type)
     
     # Prepare datasets and dataloaders for training and validation.
