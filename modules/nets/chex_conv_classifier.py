@@ -1,205 +1,111 @@
 """
-Provides a CheXConvClassifier, a custom convolutional neural network designed for image classification of CheXpert Dataset images.
-Designed to work within the `model_factory` framework for easy integration and instantiation.
+This module defines CheXConvClassifier, a convolutional neural network for classifying chest X-ray images from the CheXpert dataset.
+It features a customizable architecture with variable convolutional blocks and a residual learning approach to improve performance. 
+This classifier is designed for integration with the `model_factory` framework.
 """
-import math
+
+import torch
 from torch import nn
 
-
-def get_model(**kwargs):
+class ResidualBlock(nn.Module):
     """
-    Initializes and returns an instance of CheXConvClassifier with the specified configurations.
-    
-    The CheXConvClassifier is a CNN tailored for image classification tasks, supporting custom configurations via keyword arguments.
-    It's structured with three convolutional layers, each followed by ReLU activation and max pooling, culminating in a fully connected output layer.
+    A Residual Block for convolutional neural networks, used in the CheXConvClassifier.
 
-    Keyword Args:
-        Any configuration parameters supported by CheXConvClassifier's constructor, including:
-        - l1_kernel_size (int): Kernel size for the first convolutional layer. Default: 5.
-        - l1_stride (int): Stride for the first convolutional layer. Default: 1.
-        - l1_out_chann (int): Number of output channels for the first convolutional layer. Default: 8.
-        - (Additional layer configurations follow the same pattern).
-        - im_size (tuple[int, int]): Expected input image size as (height, width). Default: (128, 128).
-
-    Returns:
-        An instance of CheXConvClassifier configured as per the provided keyword arguments.
+    This block implements standard convolutional layers followed by batch normalization and ReLU activations. 
+    It includes a skip connection to facilitate the learning of identity functions, enhancing training deep networks.
     """
-    return CheXConvClassifier(**kwargs)
+    def __init__(self, in_channels: int, out_channels: int, kernel_size: int = 3, stride: int = 1, padding: int = 1):
+        """
+        Initializes the ResidualBlock.
+
+        Parameters:
+            in_channels (int): Number of channels in the input image.
+            out_channels (int): Number of channels produced by the convolution.
+            kernel_size (int, optional): Size of the convolving kernel. Defaults to 3.
+            stride (int, optional): Stride of the convolution. Defaults to 1.
+            padding (int, optional): Padding added to both sides of the input. Defaults to 1.
+        """
+        super(ResidualBlock, self).__init__()
+        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, bias=False)
+        self.bn1 = nn.BatchNorm2d(out_channels)
+        self.relu = nn.ReLU(inplace=True)
+        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size, stride, padding, bias=False)
+        self.bn2 = nn.BatchNorm2d(out_channels)
+        if in_channels != out_channels or stride != 1:
+            self.downsample = nn.Sequential(
+                nn.Conv2d(in_channels, out_channels, 1, stride, bias=False),
+                nn.BatchNorm2d(out_channels)
+            )
+        else:
+            self.downsample = None
+
+    def forward(self, x):
+        identity = x
+        out = self.conv1(x)
+        out = self.bn1(out)
+        out = self.relu(out)
+        out = self.conv2(out)
+        out = self.bn2(out)
+        if self.downsample is not None:
+            identity = self.downsample(x)
+        out += identity
+        out = self.relu(out)
+        return out
 
 class CheXConvClassifier(nn.Module):
     """
-    A custom convolutional neural network (CNN) called CheXConvClassifier.
-    This CNN consists of three convolutional layers followed by a ReLU activation function and a max pooling layer to reduce the spatial dimensions by half, 
-    and then the fully connected layer to produce the output predictions.
-    NOTE: The input image is expected to have a single channel (e.g., grayscale).
-    The network architecture is defined as follows:
-    - Convolutional layer 1 -> ReLU -> Max Pooling
-    - Convolutional layer 2 -> ReLU -> Max Pooling
-    - Convolutional layer 3 -> ReLU -> Max Pooling
-    - Output Fully Connected layer
+    A custom convolutional classifier for the CheXpert dataset images.
+
+    This classifier is structured to work with the `model_factory.py` module, which allows for dynamic instantiation and configuration of various model types.
     """
-    def __init__(self,
-                 l1_kernel_size: int = 5,
-                 l1_stride: int = 1,
-                 l1_out_chann: int = 8,
-                 l2_kernel_size: int = 3,
-                 l2_stride: int = 1,
-                 l2_out_chann: int = 16,
-                 l3_kernel_size: int = 3,
-                 l3_stride: int = 1,
-                 l3_out_chann: int = 32,
-                 im_size: tuple[int, int] | list[int, int] = (128, 128),
-                 **kwargs):
+    def __init__(self, initial_filters: list[int] = [16], initial_kernel_sizes: list[int] = [7],
+                 initial_strides: list[int] = [2], initial_paddings: list[int] = [3],
+                 blocks_params: list[tuple[int, int]] = [(16, 32), (32, 64)],
+                 num_classes: int = 3, **kwargs):
         """
-        Initializes the CheXConvClassifier with specified configurations for each layer.
-        
-        Params:
-            l1_kernel_size (int): Kernel size of the first convolutional layer.
-            l1_stride (int): Stride of the first convolutional layer.
-            l1_out_filters (int): Number of output filters for the first convolutional layer.
-            l2_kernel_size (int): Kernel size of the second convolutional layer.
-            l2_stride (int): Stride of the second convolutional layer.
-            l2_out_filters (int): Number of output filters for the second convolutional layer.
-            l3_kernel_size (int): Kernel size of the third convolutional layer.
-            l3_stride (int): Stride of the third convolutional layer.
-            im_size (tuple[int, int] | list[int, int]): The size of the input image (height, width).
+        Initializes the CheXConvClassifier with customizable layers and configurations.
 
-        NOTE: The input image is expected to have a single channel (e.g., grayscale).
+        Parameters:
+            initial_filters (list of int): List of the number of filters for each initial convolutional layer.
+            initial_kernel_sizes (list of int): List of kernel sizes for each initial convolutional layer.
+            initial_strides (list of int): List of strides for each initial convolutional layer.
+            initial_paddings (list of int): List of paddings for each initial convolutional layer.
+            blocks_params (list of tuples): Parameters for the ResidualBlocks, where each tuple contains in_channels and out_channels.
+            num_classes (int): Number of classes for the output layer.
 
+        Note:
+            - Ensure that the output channels of the last initial convolutional layer match the input channels of the first residual block.
+            - Each subsequent residual block should have its input channels match the output channels of the previous block, 
+              ensuring layer consistency and functional integrity of the model.
         """
         super(CheXConvClassifier, self).__init__()
-
-        self.im_height = im_size[0]
-        self.im_width = im_size[1]
-
-        # Calculate padding for convolutional layers to achieve 'same' padding effect.
-        self.l1_s_padding = self.calculate_same_padding(im_height = self.im_height,
-                                                        im_width = self.im_width,
-                                                        kernel_size = l1_kernel_size,
-                                                        stride = l1_stride)
-
-        # Initialize the number of input channels for the second convolutional layer.
-        self.l2_in_chann = l1_out_chann
-
-        # Calculate padding for the second convolutional layer.
-        self.l2_s_padding = self.calculate_same_padding(im_height = self.im_height,
-                                                        im_width = self.im_width,
-                                                        kernel_size = l2_kernel_size,
-                                                        stride = l2_stride)
+        layers = []
+        in_channels = 1
         
-        # Initialize the number of input channels for the third convolutional layer.
-        self.l3_in_chann = l2_out_chann
-        
-        # Calculate padding for the third convolutional layer.
-        self.l3_s_padding = self.calculate_same_padding(im_height = self.im_height,
-                                                        im_width = self.im_width,
-                                                        kernel_size = l3_kernel_size,
-                                                        stride = l3_stride)
+        for i in range(len(initial_filters)):
+            layers.append(nn.Conv2d(in_channels, initial_filters[i], kernel_size=initial_kernel_sizes[i], stride=initial_strides[i], padding=initial_paddings[i]))
+            layers.append(nn.ReLU())
+            in_channels = initial_filters[i]
 
-        # Calculate the number of input features for the fully connected layer.
-        # This calculation accounts for the dimensionality reduction due to 3 max pooling layers, each reducing height and width by half.
-        self.fc_in_features = int((self.im_height / (2**3)) * (self.im_width / (2**3)) * l3_out_chann)
+        for single_block_params in blocks_params:
+            in_ch, out_ch = single_block_params
+            layers.append(ResidualBlock(in_ch, out_ch))
+            in_ch = out_ch
 
-        # Define the first convolutional layer using the given parameters.
-        self.layer1conv = nn.Conv2d(in_channels = 1, # Assuming input images are grayscale
-                                    out_channels = l1_out_chann,
-                                    kernel_size = l1_kernel_size,
-                                    stride = l1_stride,
-                                    padding = self.l1_s_padding)
-        
-        # Define the second convolutional layer using the given parameters.
-        self.layer2conv = nn.Conv2d(in_channels = self.l2_in_chann,  # Number of output channels of the 1st layer as the number input channels of the 2nd layer
-                                    out_channels = l2_out_chann,
-                                    kernel_size= l2_kernel_size,
-                                    stride = l2_stride,
-                                    padding = self.l2_s_padding)
-        # Define the third convolutional layer using the given parameters.
-        self.layer3conv = nn.Conv2d(in_channels = self.l3_in_chann, # Number of output channels of the 2nd layer as the number input channels of the 3rd layer.
-                                    out_channels = l3_out_chann,
-                                    kernel_size= l3_kernel_size,
-                                    stride = l3_stride,
-                                    padding = self.l3_s_padding)
-
-        self.out = nn.Linear(in_features = self.fc_in_features, out_features = 3)
-
-        # Define max pooling layer. Reduces the spatial size of the feature map by half.
-        self.maxpool = nn.MaxPool2d(kernel_size = 2,
-                               stride = 2)
-        
-        # Define ReLU activation
-        self.relu = nn.ReLU()
-
-
-    @staticmethod
-    def calculate_same_padding(im_height:int,
-                               im_width: int,
-                               kernel_size: int,
-                               stride: int):
-        """
-        Calculate padding to achieve 'same' padding effect for convolutional layers.
-
-        This method calculates padding for convolutional layers to achieve the 'same' padding effect,
-        ensuring that the output feature maps have the same spatial dimensions as the input.
-
-        The formula used for calculating padding is:
-        padding = max(ceil((stride - 1) * im_height - stride + kernel_size) / 2, 0)
-
-        - 'stride' is the stride of the convolution operation.
-        - 'kernel_size' is the size of the convolutional kernel.
-        - 'im_height' is the height of the input feature map.
-        - 'im_width' is the width of the input feature map.
-
-        The 'ceil' function is used to round up the result of the calculation to the nearest integer.
-
-        The 'max' function is used to ensure that the calculated padding is non-negative.
-
-        Params:
-            im_height (int): Height of the input feature map.
-            im_width (int): Width of the input feature map.
-            kernel_size (int): Size of the convolutional kernel.
-            stride (int): Stride of the convolution operation.
-
-        Returns:
-            Tuple[int, int]: Padding values for height and width.
-        """
-        padding_height = max((math.ceil((stride - 1) * im_height - stride + kernel_size) / 2), 0)
-        padding_width = max((math.ceil((stride - 1) * im_width - stride + kernel_size) / 2), 0)
-        return int(padding_height), int(padding_width)
-    
+        self.features = nn.Sequential(*layers)
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.classifier = nn.Sequential(
+            nn.Linear(in_channels, 128),
+            nn.Dropout(0.5),
+            nn.Linear(128, num_classes)
+        )
 
     def forward(self, x):
-        """
-        Defines the forward pass of the CNN classifier.
+        x = self.features(x)
+        x = self.avgpool(x)
+        x = torch.flatten(x, 1)
+        x = self.classifier(x)
+        return x
 
-        Forward pass through the CNN. Applies consecutive convolutional layers with ReLU and max pooling,
-        followed by flattening and passing through fully connected layers to produce output predictions.
-
-        Params:
-            x (Tensor): A tensor representing a batch of input images with shape [batch_size, channels, height, width].
-            NOTE: The input image is expected to have a single channel (e.g., grayscale).
-
-        Returns:
-            Tensor: The output predictions of the network with shape [batch_size, num_classes].
-        """
-        # Forward pass through the first convolutional layer, followed by ReLU activation and max pooling.
-        out = self.layer1conv(x)
-        out = self.relu(out)
-        out = self.maxpool(out)
-
-        # Forward pass through the second convolutional layer, followed by ReLU activation and max pooling.
-
-        out = self.layer2conv(out)
-        out = self.relu(out)
-        out = self.maxpool(out)
-        # Forward pass through the third convolutional layer, followed by ReLU activation and max pooling.
-
-        out = self.layer3conv(out)
-        out = self.relu(out)
-        out = self.maxpool(out)
-
-        # Flatten the output tensor to prepare it for the fully connected layer, preserving the batch dimension.
-        out = out.view(out.size(0), self.fc_in_features)
-
-        # Forward pass through the out fully connected layer which produces the final outcome.
-        out = self.out(out)
-        return out
+def get_model(**kwargs) -> CheXConvClassifier:
+    return CheXConvClassifier(**kwargs)
