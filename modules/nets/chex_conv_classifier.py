@@ -26,10 +26,15 @@ class ResidualBlock(nn.Module):
             padding (int, optional): Padding added to both sides of the input. Defaults to 1.
         """
         super(ResidualBlock, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, bias=False)
+        
+        self.depthwise = nn.Conv2d(in_channels, in_channels, kernel_size, stride, padding, groups=in_channels, bias=False)
+        self.pointwise = nn.Conv2d(in_channels, out_channels, 1, 1, 0, bias=False)
+        self.bn_depthwise = nn.BatchNorm2d(in_channels)
+        self.bn_pointwise = nn.BatchNorm2d(out_channels)
+
         self.bn1 = nn.BatchNorm2d(out_channels)
         self.relu = nn.ReLU(inplace=True)
-        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size, stride, padding, bias=False)
+        
         self.bn2 = nn.BatchNorm2d(out_channels)
         if in_channels != out_channels or stride != 1:
             self.downsample = nn.Sequential(
@@ -41,17 +46,20 @@ class ResidualBlock(nn.Module):
 
     def forward(self, x):
         identity = x
-        out = self.conv1(x)
-        out = self.bn1(out)
+
+        out = self.depthwise(x)
+        out = self.bn_depthwise(out)
         out = self.relu(out)
-        out = self.conv2(out)
-        out = self.bn2(out)
+        out = self.pointwise(out)
+        out = self.bn_pointwise(out)
+        out = self.relu(out)
+
         if self.downsample is not None:
             identity = self.downsample(x)
+
         out += identity
         out = self.relu(out)
         return out
-
 class CheXConvClassifier(nn.Module):
     """
     A custom convolutional classifier for the CheXpert dataset images.
@@ -94,8 +102,9 @@ class CheXConvClassifier(nn.Module):
 
         self.features = nn.Sequential(*layers)
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        last_out_channels = blocks_params[-1][1]
         self.classifier = nn.Sequential(
-            nn.Linear(in_channels, 128),
+            nn.Linear(last_out_channels, 128),
             nn.Dropout(0.5),
             nn.Linear(128, num_classes)
         )
