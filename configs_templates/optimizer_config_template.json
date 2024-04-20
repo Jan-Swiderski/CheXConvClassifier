@@ -1,0 +1,10 @@
+{
+    "optimizer_type_info": {
+        "optimizer_module_name": "<YOUR_OPTIMIZER_MODULE_NAME (e.g., 'torch.optim')>",
+        "optimizer_class_name": "<YOUR_OPTIMIZER_CLASS_NAME (e.g., 'Adam')>"
+    },
+    "optimizer_init_params": {
+        "description": "<Include all required or desired additional optimizer parameters here, except for 'learning_rate', which is defined in 'hyperparams_config.json'.>"
+    }
+
+}

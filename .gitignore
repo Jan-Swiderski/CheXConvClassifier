@@ -2,3 +2,4 @@ dummy.py
 dummy.ipynb
 __pycache__/
 .vscode
+/configs/

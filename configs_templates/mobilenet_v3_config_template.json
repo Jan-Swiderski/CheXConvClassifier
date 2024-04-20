@@ -1,0 +1,9 @@
+{
+    "in_channels": "<INSERT_IN_CHANNELS> // The number of input channels for the model. If the key not provided in this file, model's default 1 is used.",
+    "adapt_pretrained_weights_for_inchannels": "<INSERT_ADAPT_PRETRAINED_WEIGHTS_FOR_INCHANNELS> // Whether to adapt pretrained weights for the specified number of input channels. The weights for each new channels will be set to mean of the pretrained weights if True. If the key not provided in this file, model's default True is used.",
+    "num_classes": "<INSERT_NUM_CLASSES> // The number of output classes for the model's classifier.  If the key not provided in this file, model's default 3 is used.",
+    "freeze_first_clayer": "<INSERT_FREEZE_FIRST_CLAYER> // If True, the first convolutional layer of the model will be frozen (weights will not be updated during training). If the key not provided in this file, model's default True is used.",
+    "freeze_middle_layers": "<INSERT_FREEZE_MIDDLE_LAYERS> // If True, all middle layers of the model will be frozen. If the key not provided in this file, model's default True is used.",
+    "freeze_classifier": "<INSERT_FREEZE_CLASSIFIER> // If True, the classifier layers, excluding the last layer, will be frozen. If the key not provided in this file, model's default False is used.",
+    "freeze_class_out_layer": "<INSERT_FREEZE_CLASS_OUT_LAYER> // If True, the output layer of the classifier will be frozen. This parameter inversely affects the freezing of the classifier's output layer. If the key not provided in this file, model's default False is used."
+}

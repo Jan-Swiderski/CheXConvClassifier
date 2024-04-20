@@ -1,0 +1,10 @@
+{
+    "learning_rate": "<YOUR_LEARNING_RATE>",
+    "max_epochs": "<YOUR_MAX_EPOCHS>",
+    "train_batch_size": "<YOUR_TRAIN_BATCH_SIZE>",
+    "valid_batch_size": "<YOUR_VALID_BATCH_SIZE>",
+    "patience": "<YOUR_PATIENCE>",
+    "min_improvement": "<YOUR_MIN_IMPROVEMENT>",
+    "min_mem_av_mb": "<YOUR_MIN_MEM_AV_MB> // Ram buffer size to leave free when caching preprocessed dataset data.",
+    "im_size": "<YOUR_IM_SIZE (e.g., [128, 128])>"
+}
