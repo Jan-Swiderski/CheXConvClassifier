@@ -72,9 +72,6 @@ def model_test(dataset_root: str,
     training_init_params = checkpoint_dict["training_init_params"]
     model_init_params = training_init_params["model_init_params"]
 
-    training_init_params = checkpoint_dict["training_init_params"]
-    model_init_params = training_init_params["model_init_params"]
-
     with open(filenames_config, "r") as filenames_config_json:
         filenames_dict = json.load(filenames_config_json)
 
@@ -145,10 +142,5 @@ def model_test(dataset_root: str,
         tens_im_filename = f"tens_im_idx{str(idx).zfill(5)}.jpg"
         tens_im, _ = test_dataset_tensors[idx]
         save_image(tensor=tens_im, fp=os.path.join(from_totensor_path, tens_im_filename))
-
-    if sys.platform == "win32":
-        subprocess.run(['explorer', incorrect_preds_export_path], check=True)
-    elif sys.platform == "darwin":
-        subprocess.run(['open', incorrect_preds_export_path], check=True)
-    else:
-        subprocess.run(['xdg-open', incorrect_preds_export_path], check=True)
+    
+    print(f"Finished, incorrect predictions exported to: {incorrect_preds_export_path}")
