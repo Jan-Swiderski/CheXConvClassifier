@@ -1,9 +1,0 @@
-{
-    "in_channels": 3,
-    "adapt_pretrained_weights_for_inchannels": false,
-    "num_classes": 3,
-    "freeze_first_clayer": true,
-    "freeze_middle_layers": true,
-    "freeze_classifier": true,
-    "freeze_class_out_layer": false
-}

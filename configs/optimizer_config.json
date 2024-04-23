@@ -1,8 +1,0 @@
-{
-    "optimizer_type_info": {
-        "optimizer_module_name": "torch.optim",
-        "optimizer_class_name": "Adam"
-    },
-    "optimizer_init_params": {
-    }
-}
